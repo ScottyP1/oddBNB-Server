@@ -28,8 +28,8 @@ public class UserService {
     }
 
     // UPDATE
-    public User updateUser(User user) {
-        User existing = getUser(user.getId());
+    public User updateUser(Long id, User user) {
+        User existing = getUser(id);
 
         if (!existing.getEmail().equals(user.getEmail())
                 && userRepo.existsByEmail(user.getEmail())) {
