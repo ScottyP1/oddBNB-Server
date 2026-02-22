@@ -24,8 +24,8 @@ public class ReviewService {
     }
 
     // UPDATE
-    public Review updateReview(Review review) {
-        Review existingReview = getReview(review.getId());
+    public Review updateReview(Long id, Review review) {
+        Review existingReview = getReview(id);
 
         existingReview.setComment(review.getComment());
         existingReview.setRating(review.getRating());

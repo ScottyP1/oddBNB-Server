@@ -23,8 +23,8 @@ public class ListingService {
     }
 
     // UPDATE
-    public Listing updateListing(Listing listing) {
-        Listing existingListing = getListing(listing.getId());
+    public Listing updateListing(Long id, Listing listing) {
+        Listing existingListing = getListing(id);
 
         existingListing.setDescription(listing.getDescription());
         existingListing.setAvailable(listing.isAvailable());
@@ -41,7 +41,7 @@ public class ListingService {
 
         return listingRepo.save(existingListing);
     }
-    
+
     // DELETE
     public void removeListing(Long id) {
         Listing listing = getListing(id);

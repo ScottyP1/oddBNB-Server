@@ -55,8 +55,8 @@ public class BookingService {
     }
 
     // UPDATE
-    public Booking updateBooking(Booking booking) {
-        Booking existingBooking = getBooking(booking.getId());
+    public Booking updateBooking(Long id, Booking booking) {
+        Booking existingBooking = getBooking(id);
 
         existingBooking.setCheckIn(booking.getCheckIn());
         existingBooking.setCheckOut(booking.getCheckOut());
@@ -67,7 +67,7 @@ public class BookingService {
     }
 
     // DELETE
-    public void deleteBooking(Long id) {
+    public void removeBooking(Long id) {
         Booking booking = getBooking(id);
 
         bookingRepo.delete(booking);

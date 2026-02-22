@@ -26,8 +26,8 @@ public class AmenitiesService {
     }
 
     // UPDATE
-    public Amenities updateAmenities(Amenities amenities) {
-        Amenities existingAmenities = getAmenities(amenities.getId());
+    public Amenities updateAmenities(Long id, Amenities amenities) {
+        Amenities existingAmenities = getAmenities(id);
 
         existingAmenities.setDesert_view(amenities.isDesert_view());
         existingAmenities.setMountain_view(amenities.isMountain_view());

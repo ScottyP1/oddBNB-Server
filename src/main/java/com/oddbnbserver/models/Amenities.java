@@ -147,4 +147,5 @@ public class Amenities {
     public void setSmoke_alarm(boolean smokeAlarm) {
         this.smokeAlarm = smokeAlarm;
     }
+
 }
