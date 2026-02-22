@@ -11,7 +11,7 @@ public class Amenities {
     private Long id;
 
     @OneToOne
-    @JoinColumn(name = "listing_id", nullable = false)
+    @JoinColumn(name = "listing_id", nullable = false, unique = true)
     private Listing listing;
 
     @Column(nullable = false)
