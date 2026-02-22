@@ -27,6 +27,9 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
+    @Column(nullable = false)
+    private String password_hash;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role = Role.GUEST;
@@ -39,14 +42,15 @@ public class User {
 
     @OneToMany(mappedBy = "author")
     private List<Review> reviewsWritten;
-    
+
     public User() {
     }
 
-    public User(String firstName, String lastName, String email, Role role) {
+    public User(String firstName, String lastName, String email, String password, Role role) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
+        this.password_hash = password;
         this.role = role;
     }
 
@@ -77,6 +81,14 @@ public class User {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getPassword() {
+        return password_hash;
+    }
+
+    public void setPassword(String password) {
+        this.password_hash = password;
     }
 
     public Role getRole() {

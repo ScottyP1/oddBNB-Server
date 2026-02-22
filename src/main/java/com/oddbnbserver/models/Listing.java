@@ -43,7 +43,7 @@ public class Listing {
     private Integer capacity;
 
     @Column(nullable = false)
-    private boolean availability;
+    private boolean available;
 
     @ManyToOne
     @JoinColumn(name = "host_id", nullable = false)
@@ -60,12 +60,12 @@ public class Listing {
 
     @OneToMany(mappedBy = "listing")
     private List<Review> reviews;
-    
+
     public Listing() {
     }
 
     public Listing(String title, String description, Double price_per_night, String location, Double lat, Double lon,
-                   Integer beds, Integer baths, Double square_feet, Integer capacity, boolean availability) {
+                   Integer beds, Integer baths, Double square_feet, Integer capacity, boolean available) {
         this.title = title;
         this.description = description;
         this.pricePerNight = price_per_night;
@@ -76,7 +76,7 @@ public class Listing {
         this.baths = baths;
         this.squareFeet = square_feet;
         this.capacity = capacity;
-        this.availability = availability;
+        this.available = available;
     }
 
     public Long getId() {
@@ -163,11 +163,11 @@ public class Listing {
         this.capacity = capacity;
     }
 
-    public boolean isAvailability() {
-        return availability;
+    public boolean isAvailable() {
+        return available;
     }
 
-    public void setAvailability(boolean availability) {
-        this.availability = availability;
+    public void setAvailable(boolean available) {
+        this.available = available;
     }
 }

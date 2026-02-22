@@ -2,7 +2,7 @@ package com.oddbnbserver.models;
 
 import jakarta.persistence.*;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "bookings")
@@ -26,9 +26,9 @@ public class Booking {
     @JoinColumn(name = "guest_id", nullable = false)
     private User guest;
 
-    private Date checkIn;
+    private LocalDate checkIn;
 
-    private Date checkOut;
+    private LocalDate checkOut;
 
     private Integer guestsCount;
 
@@ -40,7 +40,7 @@ public class Booking {
     public Booking() {
     }
 
-    public Booking(Long id, Listing listing, User guest, Date checkIn, Date checkOut, Integer guestsCount,
+    public Booking(Long id, Listing listing, User guest, LocalDate checkIn, LocalDate checkOut, Integer guestsCount,
                    Double totalPrice, Status status) {
         this.id = id;
         this.listing = listing;
@@ -72,19 +72,19 @@ public class Booking {
         this.guest = guest;
     }
 
-    public Date getCheckIn() {
+    public LocalDate getCheckIn() {
         return checkIn;
     }
 
-    public void setCheckIn(Date checkIn) {
+    public void setCheckIn(LocalDate checkIn) {
         this.checkIn = checkIn;
     }
 
-    public Date getCheckOut() {
+    public LocalDate getCheckOut() {
         return checkOut;
     }
 
-    public void setCheckOut(Date checkOut) {
+    public void setCheckOut(LocalDate checkOut) {
         this.checkOut = checkOut;
     }
 
