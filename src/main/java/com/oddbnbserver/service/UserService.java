@@ -1,6 +1,9 @@
 package com.oddbnbserver.service;
 
 
+import com.oddbnbserver.dto.user.UserCreateRequest;
+import com.oddbnbserver.dto.user.UserResponse;
+import com.oddbnbserver.dto.user.UserUpdateRequest;
 import com.oddbnbserver.models.User;
 import com.oddbnbserver.repositories.UserRepo;
 import org.springframework.stereotype.Service;
@@ -14,11 +17,23 @@ public class UserService {
     }
 
     // CREATE
-    public User createNewUser(User newUser) {
-        if (userRepo.existsByEmail(newUser.getEmail())) {
-            throw new RuntimeException("Email already in use");
-        }
-        return userRepo.save(newUser);
+    public UserResponse createNewUser(UserCreateRequest dto) {
+
+        User user = new User();
+        user.setEmail(dto.getEmail());
+        user.setFirstName(dto.getFirstName());
+        user.setLastName(dto.getLastName());
+        user.setPassword(dto.getPassword());
+
+        User saved = userRepo.save(user);
+
+        UserResponse response = new UserResponse();
+        response.setId(saved.getId());
+        response.setEmail(saved.getEmail());
+        response.setFirstName(saved.getFirstName());
+        response.setLastName(saved.getLastName());
+
+        return response;
     }
 
     // READ
@@ -28,27 +43,36 @@ public class UserService {
     }
 
     // UPDATE
-    public User updateUser(Long id, User user) {
+    public UserResponse updateUser(Long id, UserUpdateRequest dto) {
         User existing = getUser(id);
 
-        if (!existing.getEmail().equals(user.getEmail())
-                && userRepo.existsByEmail(user.getEmail())) {
+        if (dto.getEmail() != null
+                && !existing.getEmail().equals(dto.getEmail())
+                && userRepo.existsByEmail(dto.getEmail())) {
             throw new RuntimeException("Email already in use");
         }
-        if (user.getEmail() != null) {
-            existing.setEmail(user.getEmail());
+        if (dto.getEmail() != null) {
+            existing.setEmail(dto.getEmail());
         }
-        if (user.getFirstName() != null) {
-            existing.setFirstName(user.getFirstName());
+        if (dto.getFirstName() != null) {
+            existing.setFirstName(dto.getFirstName());
         }
-        if (user.getLastName() != null) {
-            existing.setLastName(user.getLastName());
+        if (dto.getLastName() != null) {
+            existing.setLastName(dto.getLastName());
         }
-        if (user.getPassword() != null) {
-            existing.setPassword(user.getPassword());
+        if (dto.getPassword() != null) {
+            existing.setPassword(dto.getPassword());
         }
 
-        return userRepo.save(existing);
+        User saved = userRepo.save(existing);
+
+        UserResponse response = new UserResponse();
+        response.setId(existing.getId());
+        response.setEmail(existing.getEmail());
+        response.setFirstName(existing.getFirstName());
+        response.setLastName(existing.getLastName());
+
+        return response;
     }
 
     // DELETE
