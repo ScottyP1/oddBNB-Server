@@ -46,11 +46,11 @@ public class User {
     public User() {
     }
 
-    public User(String firstName, String lastName, String email, String password, Role role) {
+    public User(String firstName, String lastName, String email, String password_hash, Role role) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
-        this.password_hash = password;
+        this.password_hash = password_hash;
         this.role = role;
     }
 
@@ -87,8 +87,8 @@ public class User {
         return password_hash;
     }
 
-    public void setPassword(String password) {
-        this.password_hash = password;
+    public void setPassword(String password_hash) {
+        this.password_hash = password_hash;
     }
 
     public Role getRole() {

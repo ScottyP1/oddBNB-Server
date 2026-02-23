@@ -1,5 +1,8 @@
 package com.oddbnbserver.controllers;
 
+import com.oddbnbserver.dto.user.UserCreateRequest;
+import com.oddbnbserver.dto.user.UserResponse;
+import com.oddbnbserver.dto.user.UserUpdateRequest;
 import com.oddbnbserver.models.User;
 import com.oddbnbserver.service.UserService;
 import org.springframework.web.bind.annotation.*;
@@ -16,8 +19,8 @@ public class UserController {
 
     // CREATE
     @PostMapping
-    public User create(@RequestBody User user) {
-        return userService.createNewUser(user);
+    public UserResponse create(@RequestBody UserCreateRequest request) {
+        return userService.createNewUser(request);
     }
 
     // READ
@@ -28,9 +31,9 @@ public class UserController {
 
     // UPDATE (PATCH = partial update)
     @PatchMapping("/{id}")
-    public User updateUser(@PathVariable Long id,
-                           @RequestBody User user) {
-        return userService.updateUser(id, user);
+    public UserResponse updateUser(@PathVariable Long id,
+                                   @RequestBody UserUpdateRequest request) {
+        return userService.updateUser(id, request);
     }
 
     // DELETE
