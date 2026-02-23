@@ -2,9 +2,15 @@ package com.oddbnbserver.models;
 
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.List;
 
+@Getter
+@Setter
+@NoArgsConstructor
 @Entity
 @Table(name = "listings")
 public class Listing {
@@ -61,113 +67,6 @@ public class Listing {
     @OneToMany(mappedBy = "listing")
     private List<Review> reviews;
 
-    public Listing() {
-    }
-
-    public Listing(String title, String description, Double price_per_night, String location, Double lat, Double lon,
-                   Integer beds, Integer baths, Double square_feet, Integer capacity, boolean available) {
-        this.title = title;
-        this.description = description;
-        this.pricePerNight = price_per_night;
-        this.location = location;
-        this.lat = lat;
-        this.lon = lon;
-        this.beds = beds;
-        this.baths = baths;
-        this.squareFeet = square_feet;
-        this.capacity = capacity;
-        this.available = available;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public Double getPrice_per_night() {
-        return pricePerNight;
-    }
-
-    public void setPrice_per_night(Double pricePerNight) {
-        this.pricePerNight = pricePerNight;
-    }
-
-    public String getLocation() {
-        return location;
-    }
-
-    public void setLocation(String location) {
-        this.location = location;
-    }
-
-    public Double getLat() {
-        return lat;
-    }
-
-    public void setLat(Double lat) {
-        this.lat = lat;
-    }
-
-    public Double getLon() {
-        return lon;
-    }
-
-    public void setLon(Double lon) {
-        this.lon = lon;
-    }
-
-    public Integer getBeds() {
-        return beds;
-    }
-
-    public void setBeds(Integer beds) {
-        this.beds = beds;
-    }
-
-    public Integer getBaths() {
-        return baths;
-    }
-
-    public void setBaths(Integer baths) {
-        this.baths = baths;
-    }
-
-    public Double getSquare_feet() {
-        return squareFeet;
-    }
-
-    public void setSquare_feet(Double squareFeet) {
-        this.squareFeet = squareFeet;
-    }
-
-    public Integer getCapacity() {
-        return capacity;
-    }
-
-    public void setCapacity(Integer capacity) {
-        this.capacity = capacity;
-    }
-
-    public boolean isAvailable() {
-        return available;
-    }
-
-    public void setAvailable(boolean available) {
-        this.available = available;
-    }
+    @OneToMany(mappedBy = "listing", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ListingImage> images;
 }
