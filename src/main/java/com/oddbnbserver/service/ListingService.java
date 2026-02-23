@@ -33,10 +33,11 @@ public class ListingService {
         existingListing.setLat(listing.getLat());
         existingListing.setLon(listing.getLon());
         existingListing.setLocation(listing.getLocation());
-        existingListing.setPrice_per_night(listing.getPrice_per_night());
-        existingListing.setSquare_feet(listing.getSquare_feet());
+        existingListing.setPricePerNight(listing.getPricePerNight());
+        existingListing.setSquareFeet(listing.getSquareFeet());
         existingListing.setTitle(listing.getTitle());
         existingListing.setCapacity(listing.getCapacity());
+        existingListing.setImages(listing.getImages());
 
 
         return listingRepo.save(existingListing);
