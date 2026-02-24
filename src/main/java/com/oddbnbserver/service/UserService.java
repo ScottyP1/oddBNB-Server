@@ -1,9 +1,9 @@
 package com.oddbnbserver.service;
 
 
-import com.oddbnbserver.dto.user.UserCreateRequest;
-import com.oddbnbserver.dto.user.UserResponse;
-import com.oddbnbserver.dto.user.UserUpdateRequest;
+import com.oddbnbserver.models.dto.user.UserCreateRequest;
+import com.oddbnbserver.models.dto.user.UserResponse;
+import com.oddbnbserver.models.dto.user.UserUpdateRequest;
 import com.oddbnbserver.models.User;
 import com.oddbnbserver.repositories.UserRepo;
 import org.springframework.stereotype.Service;

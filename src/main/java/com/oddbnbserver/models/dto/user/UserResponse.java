@@ -1,11 +1,19 @@
-package com.oddbnbserver.dto.user;
+package com.oddbnbserver.models.dto.user;
 
-public class UserUpdateRequest {
+public class UserResponse {
 
+    private Long id;
     private String email;
     private String firstName;
     private String lastName;
-    private String password_hash;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public String getEmail() {
         return email;
@@ -29,13 +37,5 @@ public class UserUpdateRequest {
 
     public void setLastName(String lastName) {
         this.lastName = lastName;
-    }
-
-    public String getPassword() {
-        return password_hash;
-    }
-
-    public void setPassword(String password_hash) {
-        this.password_hash = password_hash;
     }
 }
