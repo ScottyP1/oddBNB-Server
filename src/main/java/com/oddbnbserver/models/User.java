@@ -50,5 +50,5 @@ public class User {
 
     @OneToMany(mappedBy = "author")
     private List<Review> reviewsWritten;
-
+    
 }
