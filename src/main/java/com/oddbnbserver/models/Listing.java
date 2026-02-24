@@ -2,16 +2,18 @@ package com.oddbnbserver.models;
 
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
 
+@Entity
 @Getter
 @Setter
 @NoArgsConstructor
-@Entity
+@AllArgsConstructor
 @Table(name = "listings")
 public class Listing {
     @Id

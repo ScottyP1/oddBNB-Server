@@ -1,8 +1,16 @@
 package com.oddbnbserver.models;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "favorites")
 public class Favorite {
     @Id
@@ -16,34 +24,5 @@ public class Favorite {
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
-
-
-    public Favorite() {
-    }
-
-    public Favorite(Long id) {
-        this.id = id;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public Listing getListing() {
-        return listing;
-    }
-
-    public void setListing(Listing listing) {
-        this.listing = listing;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
 
 }
