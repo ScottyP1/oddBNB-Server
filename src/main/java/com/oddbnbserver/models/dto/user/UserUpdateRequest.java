@@ -1,11 +1,12 @@
-package com.oddbnbserver.dto.user;
+package com.oddbnbserver.models.dto.user;
 
-public class UserCreateRequest {
+
+public class UserUpdateRequest {
 
     private String email;
     private String firstName;
     private String lastName;
-    private String password;
+    private String password_hash;
 
     public String getEmail() {
         return email;
@@ -32,10 +33,10 @@ public class UserCreateRequest {
     }
 
     public String getPassword() {
-        return password;
+        return password_hash;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
+    public void setPassword(String password_hash) {
+        this.password_hash = password_hash;
     }
 }

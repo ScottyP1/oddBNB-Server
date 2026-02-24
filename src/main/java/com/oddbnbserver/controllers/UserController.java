@@ -1,8 +1,8 @@
 package com.oddbnbserver.controllers;
 
-import com.oddbnbserver.dto.user.UserCreateRequest;
-import com.oddbnbserver.dto.user.UserResponse;
-import com.oddbnbserver.dto.user.UserUpdateRequest;
+import com.oddbnbserver.models.dto.user.UserCreateRequest;
+import com.oddbnbserver.models.dto.user.UserResponse;
+import com.oddbnbserver.models.dto.user.UserUpdateRequest;
 import com.oddbnbserver.models.User;
 import com.oddbnbserver.service.UserService;
 import org.springframework.web.bind.annotation.*;
