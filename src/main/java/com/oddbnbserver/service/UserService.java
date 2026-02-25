@@ -1,8 +1,9 @@
 package com.oddbnbserver.service;
 
 
+import com.oddbnbserver.models.Review;
 import com.oddbnbserver.models.User;
-import com.oddbnbserver.models.dto.user.UserCreateRequest;
+import com.oddbnbserver.models.dto.auth.RegisterRequest;
 import com.oddbnbserver.models.dto.user.UserResponse;
 import com.oddbnbserver.models.dto.user.UserUpdateRequest;
 import com.oddbnbserver.repositories.UserRepo;
@@ -21,7 +22,7 @@ public class UserService {
     }
 
     // CREATE
-    public UserResponse createNewUser(UserCreateRequest dto) {
+    public UserResponse createNewUser(RegisterRequest dto) {
 
         User user = new User();
         user.setEmail(dto.getEmail());
@@ -78,9 +79,9 @@ public class UserService {
         if (dto.getLastName() != null) {
             existing.setLastName(dto.getLastName());
         }
-        if (dto.getPasswordHash() != null) {
+        if (dto.getPassword() != null) {
             existing.setPasswordHash(
-                    passwordEncoder.encode(dto.getPasswordHash())
+                    passwordEncoder.encode(dto.getPassword())
             );
         }
 
@@ -106,5 +107,27 @@ public class UserService {
 
         User user = getUser(id);
         userRepo.delete(user);
+    }
+
+    public UserResponse getUserResponse(Long id) {
+
+        User user = getUser(id);
+        Review review = getV
+
+        UserResponse res = new UserResponse();
+        res.setId(user.getId());
+        res.setEmail(user.getEmail());
+        res.setFirstName(user.getFirstName());
+        res.setLastName(user.getLastName());
+        res.setReviewsWritten(user.getReviewsWritten());
+
+        UserResponse res = new UserResponse();
+        res.setId(user.getId());
+        res.setEmail(user.getEmail());
+        res.setFirstName(user.getFirstName());
+        res.setLastName(user.getLastName());
+        res.setReviewsWritten(user.getReviewsWritten());
+
+        return res;
     }
 }

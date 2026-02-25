@@ -2,28 +2,51 @@ package com.oddbnbserver.controllers;
 
 import com.oddbnbserver.models.User;
 import com.oddbnbserver.models.dto.auth.LoginRequest;
+import com.oddbnbserver.models.dto.auth.RegisterRequest;
+import com.oddbnbserver.models.dto.user.UserResponse;
 import com.oddbnbserver.repositories.UserRepo;
 import com.oddbnbserver.security.JwtService;
+import com.oddbnbserver.service.UserService;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
 
     private final UserRepo userRepo;
+    private final UserService userService;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
     public AuthController(UserRepo userRepo,
                           PasswordEncoder passwordEncoder,
-                          JwtService jwtService) {
+                          JwtService jwtService, UserService userService) {
         this.userRepo = userRepo;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.userService = userService;
+    }
+
+    @GetMapping("/debug/auth")
+    public Object debugAuth() {
+        Authentication auth =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        return Map.of(
+                "principal", auth.getPrincipal(),
+                "principalType", auth.getPrincipal().getClass().getName(),
+                "authorities", auth.getAuthorities()
+        );
+    }
+
+    @PostMapping("/register")
+    public UserResponse register(@RequestBody RegisterRequest request) {
+        return userService.createNewUser(request);
     }
 
     @PostMapping("/login")
