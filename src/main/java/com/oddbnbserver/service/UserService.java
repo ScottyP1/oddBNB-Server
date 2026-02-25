@@ -78,9 +78,9 @@ public class UserService {
         if (dto.getLastName() != null) {
             existing.setLastName(dto.getLastName());
         }
-        if (dto.getPassword() != null) {
+        if (dto.getPasswordHash() != null) {
             existing.setPasswordHash(
-                    passwordEncoder.encode(dto.getPassword())
+                    passwordEncoder.encode(dto.getPasswordHash())
             );
         }
 
