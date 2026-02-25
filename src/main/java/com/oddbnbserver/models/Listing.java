@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -57,18 +58,18 @@ public class Listing {
     @JoinColumn(name = "host_id", nullable = false)
     private User host;
 
-    @OneToMany(mappedBy = "listing", fetch = FetchType.LAZY)
-    private List<Favorite> favorites;
+    @OneToMany(mappedBy = "listing", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Favorite> favorites = new ArrayList<>();
 
-    @OneToOne(mappedBy = "listing", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "listing", cascade = CascadeType.ALL, orphanRemoval = true)
     private Amenities amenities;
 
-    @OneToMany(mappedBy = "listing", fetch = FetchType.LAZY)
-    private List<Booking> bookings;
-
-    @OneToMany(mappedBy = "listing")
-    private List<Review> reviews;
+    @OneToMany(mappedBy = "listing", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Booking> bookings = new ArrayList<>();
 
     @OneToMany(mappedBy = "listing", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ListingImage> images;
+    private List<Review> reviews = new ArrayList<>();
+
+    @OneToMany(mappedBy = "listing", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ListingImage> images = new java.util.ArrayList<>();
 }

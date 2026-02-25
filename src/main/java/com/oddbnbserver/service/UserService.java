@@ -1,6 +1,7 @@
 package com.oddbnbserver.service;
 
-
+import com.oddbnbserver.models.Favorite;
+import com.oddbnbserver.models.Listing;
 import com.oddbnbserver.models.Review;
 import com.oddbnbserver.models.User;
 import com.oddbnbserver.models.dto.auth.RegisterRequest;
@@ -8,11 +9,15 @@ import com.oddbnbserver.models.dto.user.UserResponse;
 import com.oddbnbserver.models.dto.user.UserUpdateRequest;
 import com.oddbnbserver.repositories.UserRepo;
 import com.oddbnbserver.security.SecurityUtils;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class UserService {
+
     private final UserRepo userRepo;
     private final PasswordEncoder passwordEncoder;
 
@@ -21,64 +26,74 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    // =========================================================
     // CREATE
+    // =========================================================
     public UserResponse createNewUser(RegisterRequest dto) {
+
+        if (userRepo.existsByEmail(dto.getEmail())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Email already in use"
+            );
+        }
 
         User user = new User();
         user.setEmail(dto.getEmail());
         user.setFirstName(dto.getFirstName());
         user.setLastName(dto.getLastName());
-        user.setPasswordHash(
-                passwordEncoder.encode(dto.getPassword())
-        );
+        user.setPasswordHash(passwordEncoder.encode(dto.getPassword()));
+        user.setRole(User.Role.GUEST);
+
         User saved = userRepo.save(user);
 
-        UserResponse response = new UserResponse();
-        response.setId(saved.getId());
-        response.setEmail(saved.getEmail());
-        response.setFirstName(saved.getFirstName());
-        response.setLastName(saved.getLastName());
-
-        return response;
+        return toResponse(saved);
     }
 
-    // READ
-    public User getUser(Long id) {
-
-        Long currentUserId = SecurityUtils.getCurrentUserId();
-
-        if (!currentUserId.equals(id)) {
-            throw new RuntimeException("Forbidden");
-        }
-
-        return userRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    // =========================================================
+    // READ (Current User Only)
+    // =========================================================
+    public UserResponse getUser(Long id) {
+        User user = getUserEntity(id);
+        return toResponse(user);
     }
 
+    // =========================================================
     // UPDATE
+    // =========================================================
     public UserResponse updateUser(Long id, UserUpdateRequest dto) {
-        Long currentUserId = SecurityUtils.getCurrentUserId();
 
-        if (!currentUserId.equals(id)) {
-            throw new RuntimeException("Forbidden");
+        User existing = getUserEntity(id);
+
+        if (dto.getRole() != null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Role updates not allowed"
+            );
         }
-
-        User existing = getUser(id);
 
         if (dto.getEmail() != null
                 && !existing.getEmail().equals(dto.getEmail())
                 && userRepo.existsByEmail(dto.getEmail())) {
-            throw new RuntimeException("Email already in use");
+
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Email already in use"
+            );
         }
+
         if (dto.getEmail() != null) {
             existing.setEmail(dto.getEmail());
         }
+
         if (dto.getFirstName() != null) {
             existing.setFirstName(dto.getFirstName());
         }
+
         if (dto.getLastName() != null) {
             existing.setLastName(dto.getLastName());
         }
+
         if (dto.getPassword() != null) {
             existing.setPasswordHash(
                     passwordEncoder.encode(dto.getPassword())
@@ -87,46 +102,87 @@ public class UserService {
 
         User saved = userRepo.save(existing);
 
-        UserResponse response = new UserResponse();
-        response.setId(existing.getId());
-        response.setEmail(existing.getEmail());
-        response.setFirstName(existing.getFirstName());
-        response.setLastName(existing.getLastName());
-
-        return response;
+        return getUserResponse(id);
     }
 
+    // =========================================================
     // DELETE
+    // =========================================================
     public void removeUser(Long id) {
+        User user = getUserEntity(id);
+        userRepo.delete(user);
+    }
+
+    // =========================================================
+    // USER WITH RELATIONSHIPS
+    // =========================================================
+    public UserResponse getUserResponse(Long id) {
+
+        User user = getUserEntity(id);
+        UserResponse res = toResponse(user);
+
+        res.setReviewIds(
+                user.getReviewsWritten()
+                        .stream()
+                        .map(Review::getId)
+                        .toList()
+        );
+
+        res.setHostedListingIds(
+                user.getHostedListings()
+                        .stream()
+                        .map(Listing::getId)
+                        .toList()
+        );
+
+        res.setFavoriteIds(
+                user.getFavorites()
+                        .stream()
+                        .map(Favorite::getId)
+                        .toList()
+        );
+
+        return res;
+    }
+
+    // =========================================================
+    // PRIVATE HELPERS
+    // =========================================================
+
+    /**
+     * Centralized authorization + existence check
+     * Returns entity for internal use only
+     */
+    private User getUserEntity(Long id) {
 
         Long currentUserId = SecurityUtils.getCurrentUserId();
 
         if (!currentUserId.equals(id)) {
-            throw new RuntimeException("Forbidden");
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "You cannot access another user's data"
+            );
         }
 
-        User user = getUser(id);
-        userRepo.delete(user);
+        return userRepo.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "User not found"
+                ));
     }
 
-    public UserResponse getUserResponse(Long id) {
-
-        User user = getUser(id);
-        Review review = getV
+    /**
+     * Entity → DTO mapping
+     */
+    private UserResponse toResponse(User user) {
 
         UserResponse res = new UserResponse();
+
         res.setId(user.getId());
         res.setEmail(user.getEmail());
         res.setFirstName(user.getFirstName());
         res.setLastName(user.getLastName());
-        res.setReviewsWritten(user.getReviewsWritten());
-
-        UserResponse res = new UserResponse();
-        res.setId(user.getId());
-        res.setEmail(user.getEmail());
-        res.setFirstName(user.getFirstName());
-        res.setLastName(user.getLastName());
-        res.setReviewsWritten(user.getReviewsWritten());
+        res.setRole(user.getRole());
 
         return res;
     }

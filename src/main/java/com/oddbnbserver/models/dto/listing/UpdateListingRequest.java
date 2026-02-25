@@ -5,15 +5,20 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class ListingSummary {
+public class UpdateListingRequest {
 
-    private Long id;
     private String title;
+    private String description;
     private Double pricePerNight;
+    private String location;
+
+    private Double lat;
+    private Double lon;
+
     private Integer beds;
     private Integer baths;
     private Integer capacity;
+    private Double squareFeet;
 
-    private Integer reviewCount;
-    private Double rating;
+    private Boolean available;
 }

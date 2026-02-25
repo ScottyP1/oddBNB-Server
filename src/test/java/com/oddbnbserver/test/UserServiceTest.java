@@ -1,23 +1,29 @@
 package com.oddbnbserver.test;
 
 import com.oddbnbserver.models.User;
+import com.oddbnbserver.models.dto.user.UserResponse;
 import com.oddbnbserver.repositories.UserRepo;
 import com.oddbnbserver.service.UserService;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -26,20 +32,32 @@ class UserServiceTest {
     @Mock
     private UserRepo userRepo;
 
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
     @InjectMocks
     private UserService userService;
 
     private User user;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
+
         user = new User();
         user.setId(1L);
         user.setFirstName("Cody");
         user.setLastName("Scott");
-        user.setEmail("test");
-        user.setPasswordHash("test");
+        user.setEmail("test@example.com");
+        user.setPasswordHash("hash");
         user.setRole(User.Role.ADMIN);
+
+        var auth = new UsernamePasswordAuthenticationToken(
+                1L,  // principal = user ID
+                null,
+                List.of()
+        );
+
+        SecurityContextHolder.getContext().setAuthentication(auth);
     }
 
     @AfterEach
@@ -47,47 +65,56 @@ class UserServiceTest {
         SecurityContextHolder.clearContext();
     }
 
+    // =====================================================
+    // SUCCESS CASE
+    // =====================================================
     @Test
     void shouldReturnUserWhenFound() {
-
-        var auth = new UsernamePasswordAuthenticationToken(
-                1L,
-                null,
-                List.of()
-        );
-
-        SecurityContextHolder.getContext().setAuthentication(auth);
-
-        User user = new User();
-        user.setId(1L);
 
         when(userRepo.findById(1L))
                 .thenReturn(Optional.of(user));
 
-        User result = userService.getUser(1L);
+        UserResponse result = userService.getUser(1L);
 
         assertEquals(1L, result.getId());
+        assertEquals("Cody", result.getFirstName());
+        assertEquals("Scott", result.getLastName());
+        assertEquals("test@example.com", result.getEmail());
+        assertEquals(User.Role.ADMIN, result.getRole());
     }
 
+    // =====================================================
+    // NOT FOUND CASE
+    // =====================================================
     @Test
     void shouldThrowWhenUserNotFound() {
-        var auth = new UsernamePasswordAuthenticationToken(
-                1L,
-                null,
-                List.of()
-        );
-
-        SecurityContextHolder.getContext().setAuthentication(auth);
 
         when(userRepo.findById(1L))
                 .thenReturn(Optional.empty());
 
-        RuntimeException ex = assertThrows(
-                RuntimeException.class,
+        ResponseStatusException ex = assertThrows(
+                ResponseStatusException.class,
                 () -> userService.getUser(1L)
         );
 
-        assertEquals("User not found", ex.getMessage());
+        assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
+        assertEquals("User not found", ex.getReason());
     }
 
+    // =====================================================
+    // FORBIDDEN CASE
+    // =====================================================
+    @Test
+    void shouldThrowWhenAccessingDifferentUser() {
+
+        when(userRepo.findById(2L))
+                .thenReturn(Optional.of(user));
+
+        ResponseStatusException ex = assertThrows(
+                ResponseStatusException.class,
+                () -> userService.getUser(2L)
+        );
+
+        assertEquals(HttpStatus.FORBIDDEN, ex.getStatusCode());
+    }
 }
