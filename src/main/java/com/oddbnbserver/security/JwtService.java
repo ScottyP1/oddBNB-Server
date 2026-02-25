@@ -2,6 +2,7 @@ package com.oddbnbserver.security;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -10,29 +11,24 @@ import java.util.Date;
 @Service
 public class JwtService {
 
-    private static final String SECRET =
-            "very-long-secret-key-very-long-secret-key";
+    @Value("${jwt.secret}")
+    private String secret;
 
     private SecretKey getKey() {
-        return Keys.hmacShaKeyFor(SECRET.getBytes());
+        return Keys.hmacShaKeyFor(secret.getBytes());
     }
 
-    // Create token with user ID
     public String generateToken(Long userId, String role) {
-
         return Jwts.builder()
                 .subject(String.valueOf(userId))
-                .claim("role", role)        // ⭐ NEW
+                .claim("role", role)
                 .issuedAt(new Date())
-                .expiration(new Date(
-                        System.currentTimeMillis() + 86400000))
+                .expiration(new Date(System.currentTimeMillis() + 86400000))
                 .signWith(getKey())
                 .compact();
     }
 
-    // Extract user ID
     public Long extractUserId(String token) {
-
         String id = Jwts.parser()
                 .verifyWith(getKey())
                 .build()
@@ -44,7 +40,6 @@ public class JwtService {
     }
 
     public String extractRole(String token) {
-
         return Jwts.parser()
                 .verifyWith(getKey())
                 .build()

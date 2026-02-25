@@ -12,11 +12,27 @@ public class SecurityUtils {
         Authentication auth =
                 SecurityContextHolder.getContext().getAuthentication();
 
-        if (auth == null || auth.getPrincipal() == null) {
+        if (auth == null || !auth.isAuthenticated()) {
             throw new RuntimeException("Not authenticated");
         }
 
-        return (Long) auth.getPrincipal();
+        Object principal = auth.getPrincipal();
+
+        if (principal instanceof Long id) {
+            return id;
+        }
+        if (principal instanceof String str) {
+
+            if ("anonymousUser".equals(str)) {
+                throw new RuntimeException("Not authenticated");
+            }
+
+            return Long.parseLong(str);
+        }
+
+        assert principal != null;
+        throw new RuntimeException(
+                "Unexpected principal type: " + principal.getClass());
     }
 
     public static boolean isAdmin() {

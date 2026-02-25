@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -20,14 +21,12 @@ public class SecurityConfig {
             JwtService jwtService) throws Exception {
 
         http
-                .csrf(csrf -> csrf.disable()) // APIs don't need CSRF
+                .csrf(AbstractHttpConfigurer::disable) // APIs don't need CSRF
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         // PUBLIC
                         .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("POST", "/users").permitAll()
-
                         // EVERYTHING ELSE REQUIRES AUTH
                         .anyRequest().authenticated()
                 )
