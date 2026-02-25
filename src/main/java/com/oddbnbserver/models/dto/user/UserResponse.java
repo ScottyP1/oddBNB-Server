@@ -1,8 +1,7 @@
 package com.oddbnbserver.models.dto.user;
 
 
-import com.oddbnbserver.models.dto.listing.ListingSummary;
-import com.oddbnbserver.models.dto.review.ReviewSummary;
+import com.oddbnbserver.models.User;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -16,7 +15,10 @@ public class UserResponse {
     private String email;
     private String firstName;
     private String lastName;
+    private User.Role role;
 
-    private List<ListingSummary> hostedListings;
-    private List<ReviewSummary> reviewsWritten;
+    private List<Long> hostedListingIds = List.of();
+    private List<Long> reviewIds = List.of();
+    private List<Long> favoriteIds = List.of();
+
 }

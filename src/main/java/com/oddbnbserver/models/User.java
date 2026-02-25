@@ -42,13 +42,13 @@ public class User {
     @Column(nullable = false)
     private Role role = Role.GUEST;
 
-    @OneToMany(mappedBy = "host", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "host", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Listing> hostedListings;
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Favorite> favorites;
 
-    @OneToMany(mappedBy = "author")
+    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Review> reviewsWritten;
 
 }

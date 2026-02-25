@@ -19,15 +19,15 @@ public class Review {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "booking_id", nullable = false)
+    @JoinColumn(name = "booking_id", nullable = true)
     private Booking booking;
 
     @ManyToOne
-    @JoinColumn(name = "author_id", nullable = false)
+    @JoinColumn(name = "author_id", nullable = true)
     private User author;
 
     @ManyToOne
-    @JoinColumn(name = "listing_id", nullable = false)
+    @JoinColumn(name = "listing_id", nullable = true)
     private Listing listing;
 
     @Column(nullable = false)

@@ -1,9 +1,12 @@
 package com.oddbnbserver.controllers;
 
-import com.oddbnbserver.models.Listing;
+import com.oddbnbserver.models.dto.listing.*;
 import com.oddbnbserver.service.ListingService;
+
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/listings")
@@ -17,30 +20,37 @@ public class ListingController {
 
     // CREATE
     @PostMapping
-    @PreAuthorize("hasRole('HOST')")
-    public Listing create(@RequestBody Listing listing) {
-        return listingService.create(listing);
+    @PreAuthorize("hasAnyRole('HOST','ADMIN')")
+    public ListingDetail create(@RequestBody CreateListingRequest dto) {
+        System.out.println("Controller");
+        return listingService.create(dto);
     }
 
     // READ
-    @GetMapping("/{id}")
-    public Listing getReview(@PathVariable Long id) {
-        return listingService.getListing(id);
+    @GetMapping
+    public List<ListingSummary> getAllListings() {
+        return listingService.getAllListings();
     }
 
-    // UPDATE (PATCH = partial update)
+    @GetMapping("/{id}")
+    public ListingDetail getListing(@PathVariable Long id) {
+        return listingService.getListingDetail(id);
+    }
+
+    // UPDATE
     @PatchMapping("/{id}")
     @PreAuthorize("hasAnyRole('HOST','ADMIN')")
-    public Listing updateReview(@PathVariable Long id,
-                                @RequestBody Listing listing) {
-        return listingService.updateListing(id, listing);
+    public ListingDetail update(
+            @PathVariable Long id,
+            @RequestBody UpdateListingRequest dto) {
+
+        return listingService.updateListing(id, dto);
     }
 
     // DELETE
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('HOST','ADMIN')")
-    public void deleteReview(@PathVariable Long id) {
+    public void delete(@PathVariable Long id) {
         listingService.removeListing(id);
     }
-
 }
