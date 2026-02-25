@@ -1,10 +1,11 @@
 package com.oddbnbserver.controllers;
 
+import com.oddbnbserver.models.User;
 import com.oddbnbserver.models.dto.user.UserCreateRequest;
 import com.oddbnbserver.models.dto.user.UserResponse;
 import com.oddbnbserver.models.dto.user.UserUpdateRequest;
-import com.oddbnbserver.models.User;
 import com.oddbnbserver.service.UserService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -25,12 +26,14 @@ public class UserController {
 
     // READ
     @GetMapping("/{id}")
+    @PreAuthorize("#id == authentication.principal or hasRole('ADMIN')")
     public User getUser(@PathVariable Long id) {
         return userService.getUser(id);
     }
 
     // UPDATE (PATCH = partial update)
     @PatchMapping("/{id}")
+    @PreAuthorize("#id == authentication.principal or hasRole('ADMIN')")
     public UserResponse updateUser(@PathVariable Long id,
                                    @RequestBody UserUpdateRequest request) {
         return userService.updateUser(id, request);
@@ -38,6 +41,7 @@ public class UserController {
 
     // DELETE
     @DeleteMapping("/{id}")
+    @PreAuthorize("#id == authentication.principal or hasRole('ADMIN')")
     public void deleteUser(@PathVariable Long id) {
         userService.removeUser(id);
     }

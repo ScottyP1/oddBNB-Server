@@ -18,10 +18,11 @@ public class JwtService {
     }
 
     // Create token with user ID
-    public String generateToken(Long userId) {
+    public String generateToken(Long userId, String role) {
 
         return Jwts.builder()
-                .subject(String.valueOf(userId)) // ← store ID
+                .subject(String.valueOf(userId))
+                .claim("role", role)        // ⭐ NEW
                 .issuedAt(new Date())
                 .expiration(new Date(
                         System.currentTimeMillis() + 86400000))
@@ -40,5 +41,15 @@ public class JwtService {
                 .getSubject();
 
         return Long.parseLong(id);
+    }
+
+    public String extractRole(String token) {
+
+        return Jwts.parser()
+                .verifyWith(getKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .get("role", String.class);
     }
 }
