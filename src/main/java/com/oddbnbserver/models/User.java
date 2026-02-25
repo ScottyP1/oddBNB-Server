@@ -36,7 +36,7 @@ public class User {
     private String email;
 
     @Column(nullable = false)
-    private String password_hash;
+    private String passwordHash;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -50,5 +50,5 @@ public class User {
 
     @OneToMany(mappedBy = "author")
     private List<Review> reviewsWritten;
-    
+
 }

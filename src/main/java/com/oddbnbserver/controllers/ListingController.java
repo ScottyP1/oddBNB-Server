@@ -2,6 +2,7 @@ package com.oddbnbserver.controllers;
 
 import com.oddbnbserver.models.Listing;
 import com.oddbnbserver.service.ListingService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -16,6 +17,7 @@ public class ListingController {
 
     // CREATE
     @PostMapping
+    @PreAuthorize("hasRole('HOST')")
     public Listing create(@RequestBody Listing listing) {
         return listingService.create(listing);
     }
@@ -28,6 +30,7 @@ public class ListingController {
 
     // UPDATE (PATCH = partial update)
     @PatchMapping("/{id}")
+    @PreAuthorize("hasAnyRole('HOST','ADMIN')")
     public Listing updateReview(@PathVariable Long id,
                                 @RequestBody Listing listing) {
         return listingService.updateListing(id, listing);
@@ -35,6 +38,7 @@ public class ListingController {
 
     // DELETE
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('HOST','ADMIN')")
     public void deleteReview(@PathVariable Long id) {
         listingService.removeListing(id);
     }

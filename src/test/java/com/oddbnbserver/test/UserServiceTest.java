@@ -34,7 +34,7 @@ class UserServiceTest {
         user.setFirstName("Cody");
         user.setLastName("Scott");
         user.setEmail("test");
-        user.setPassword_hash("test");
+        user.setPasswordHash("test");
         user.setRole(User.Role.ADMIN);
     }
 

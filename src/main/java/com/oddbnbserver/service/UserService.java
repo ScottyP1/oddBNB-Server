@@ -1,19 +1,23 @@
 package com.oddbnbserver.service;
 
 
+import com.oddbnbserver.models.User;
 import com.oddbnbserver.models.dto.user.UserCreateRequest;
 import com.oddbnbserver.models.dto.user.UserResponse;
 import com.oddbnbserver.models.dto.user.UserUpdateRequest;
-import com.oddbnbserver.models.User;
 import com.oddbnbserver.repositories.UserRepo;
+import com.oddbnbserver.security.SecurityUtils;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UserService {
     private final UserRepo userRepo;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepo userRepo) {
+    public UserService(UserRepo userRepo, PasswordEncoder passwordEncoder) {
         this.userRepo = userRepo;
+        this.passwordEncoder = passwordEncoder;
     }
 
     // CREATE
@@ -23,8 +27,9 @@ public class UserService {
         user.setEmail(dto.getEmail());
         user.setFirstName(dto.getFirstName());
         user.setLastName(dto.getLastName());
-        user.setPassword_hash(dto.getPassword());
-
+        user.setPasswordHash(
+                passwordEncoder.encode(dto.getPassword())
+        );
         User saved = userRepo.save(user);
 
         UserResponse response = new UserResponse();
@@ -38,12 +43,25 @@ public class UserService {
 
     // READ
     public User getUser(Long id) {
+
+        Long currentUserId = SecurityUtils.getCurrentUserId();
+
+        if (!currentUserId.equals(id)) {
+            throw new RuntimeException("Forbidden");
+        }
+
         return userRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
     // UPDATE
     public UserResponse updateUser(Long id, UserUpdateRequest dto) {
+        Long currentUserId = SecurityUtils.getCurrentUserId();
+
+        if (!currentUserId.equals(id)) {
+            throw new RuntimeException("Forbidden");
+        }
+
         User existing = getUser(id);
 
         if (dto.getEmail() != null
@@ -60,8 +78,10 @@ public class UserService {
         if (dto.getLastName() != null) {
             existing.setLastName(dto.getLastName());
         }
-        if (dto.getPassword() != null) {
-            existing.setPassword_hash(dto.getPassword());
+        if (dto.getPasswordHash() != null) {
+            existing.setPasswordHash(
+                    passwordEncoder.encode(dto.getPasswordHash())
+            );
         }
 
         User saved = userRepo.save(existing);
@@ -77,6 +97,13 @@ public class UserService {
 
     // DELETE
     public void removeUser(Long id) {
+
+        Long currentUserId = SecurityUtils.getCurrentUserId();
+
+        if (!currentUserId.equals(id)) {
+            throw new RuntimeException("Forbidden");
+        }
+
         User user = getUser(id);
         userRepo.delete(user);
     }

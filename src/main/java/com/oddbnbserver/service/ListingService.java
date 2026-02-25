@@ -1,19 +1,32 @@
 package com.oddbnbserver.service;
 
 import com.oddbnbserver.models.Listing;
+import com.oddbnbserver.models.User;
 import com.oddbnbserver.repositories.ListingRepo;
+import com.oddbnbserver.repositories.UserRepo;
+import com.oddbnbserver.security.SecurityUtils;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ListingService {
     private final ListingRepo listingRepo;
+    private final UserRepo userRepo;
 
-    public ListingService(ListingRepo listingRepo) {
+    public ListingService(ListingRepo listingRepo, UserRepo userRepo) {
         this.listingRepo = listingRepo;
+        this.userRepo = userRepo;
     }
 
     // CREATE
     public Listing create(Listing newListing) {
+
+        Long currentUserId = SecurityUtils.getCurrentUserId();
+
+        User host = userRepo.findById(currentUserId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        newListing.setHost(host);
+
         return listingRepo.save(newListing);
     }
 
@@ -24,28 +37,53 @@ public class ListingService {
 
     // UPDATE
     public Listing updateListing(Long id, Listing listing) {
-        Listing existingListing = getListing(id);
 
-        existingListing.setDescription(listing.getDescription());
-        existingListing.setAvailable(listing.isAvailable());
-        existingListing.setBaths(listing.getBaths());
-        existingListing.setBeds(listing.getBeds());
-        existingListing.setLat(listing.getLat());
-        existingListing.setLon(listing.getLon());
-        existingListing.setLocation(listing.getLocation());
-        existingListing.setPricePerNight(listing.getPricePerNight());
-        existingListing.setSquareFeet(listing.getSquareFeet());
-        existingListing.setTitle(listing.getTitle());
-        existingListing.setCapacity(listing.getCapacity());
-        existingListing.setImages(listing.getImages());
+        Listing existing = getListing(id);
 
+        Long currentUserId = SecurityUtils.getCurrentUserId();
 
-        return listingRepo.save(existingListing);
+        boolean isOwner =
+                existing.getHost().getId().equals(currentUserId);
+
+        boolean isAdmin = SecurityUtils.isAdmin();
+
+        if (!isOwner && !isAdmin) {
+            throw new RuntimeException("Forbidden");
+        }
+
+        // Apply updates
+        existing.setDescription(listing.getDescription());
+        existing.setAvailable(listing.isAvailable());
+        existing.setBaths(listing.getBaths());
+        existing.setBeds(listing.getBeds());
+        existing.setLat(listing.getLat());
+        existing.setLon(listing.getLon());
+        existing.setLocation(listing.getLocation());
+        existing.setPricePerNight(listing.getPricePerNight());
+        existing.setSquareFeet(listing.getSquareFeet());
+        existing.setTitle(listing.getTitle());
+        existing.setCapacity(listing.getCapacity());
+        existing.setImages(listing.getImages());
+
+        return listingRepo.save(existing);
     }
 
     // DELETE
     public void removeListing(Long id) {
+
         Listing listing = getListing(id);
+
+        Long currentUserId = SecurityUtils.getCurrentUserId();
+
+        boolean isOwner =
+                listing.getHost().getId().equals(currentUserId);
+
+        boolean isAdmin = SecurityUtils.isAdmin();
+
+        if (!isOwner && !isAdmin) {
+            throw new RuntimeException("Forbidden");
+        }
+
         listingRepo.delete(listing);
     }
 }
