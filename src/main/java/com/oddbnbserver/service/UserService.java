@@ -23,7 +23,7 @@ public class UserService {
         user.setEmail(dto.getEmail());
         user.setFirstName(dto.getFirstName());
         user.setLastName(dto.getLastName());
-        user.setPassword(dto.getPassword());
+        user.setPassword_hash(dto.getPassword());
 
         User saved = userRepo.save(user);
 
@@ -61,7 +61,7 @@ public class UserService {
             existing.setLastName(dto.getLastName());
         }
         if (dto.getPassword() != null) {
-            existing.setPassword(dto.getPassword());
+            existing.setPassword_hash(dto.getPassword());
         }
 
         User saved = userRepo.save(existing);

@@ -34,7 +34,7 @@ class UserServiceTest {
         user.setFirstName("Cody");
         user.setLastName("Scott");
         user.setEmail("test");
-        user.setPassword("test");
+        user.setPassword_hash("test");
         user.setRole(User.Role.ADMIN);
     }
 
@@ -60,5 +60,5 @@ class UserServiceTest {
 
         assertEquals("User not found", ex.getMessage());
     }
-    
+
 }

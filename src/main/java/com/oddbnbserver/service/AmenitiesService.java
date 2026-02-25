@@ -29,16 +29,16 @@ public class AmenitiesService {
     public Amenities updateAmenities(Long id, Amenities amenities) {
         Amenities existingAmenities = getAmenities(id);
 
-        existingAmenities.setDesert_view(amenities.isDesert_view());
-        existingAmenities.setMountain_view(amenities.isMountain_view());
-        existingAmenities.setValley_view(amenities.isValley_view());
+        existingAmenities.setDesertView(amenities.isDesertView());
+        existingAmenities.setMountainView(amenities.isMountainView());
+        existingAmenities.setValleyView(amenities.isValleyView());
         existingAmenities.setWifi(amenities.isWifi());
         existingAmenities.setTv(amenities.isTv());
         existingAmenities.setKitchen(amenities.isKitchen());
         existingAmenities.setWasher(amenities.isWasher());
         existingAmenities.setDryer(amenities.isDryer());
-        existingAmenities.setPets_allowed(amenities.isPets_allowed());
-        existingAmenities.setSmoke_alarm(amenities.isSmoke_alarm());
+        existingAmenities.setPetsAllowed(amenities.isPetsAllowed());
+        existingAmenities.setSmokeAlarm(amenities.isSmokeAlarm());
 
         return amenitiesRepo.save(existingAmenities);
     }
