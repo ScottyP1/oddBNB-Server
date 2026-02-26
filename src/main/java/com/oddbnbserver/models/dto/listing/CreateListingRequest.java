@@ -3,6 +3,8 @@ package com.oddbnbserver.models.dto.listing;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalTime;
+
 @Getter
 @Setter
 public class CreateListingRequest {
@@ -19,6 +21,7 @@ public class CreateListingRequest {
     private Integer baths;
     private Integer capacity;
     private Double squareFeet;
-
+    private LocalTime checkInTime;
+    private LocalTime checkOutTime;
     private boolean available;
 }

@@ -26,9 +26,7 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    // =========================================================
     // CREATE
-    // =========================================================
     public UserResponse createNewUser(RegisterRequest dto) {
 
         if (userRepo.existsByEmail(dto.getEmail())) {
@@ -50,17 +48,13 @@ public class UserService {
         return toResponse(saved);
     }
 
-    // =========================================================
     // READ (Current User Only)
-    // =========================================================
     public UserResponse getUser(Long id) {
         User user = getUserEntity(id);
         return toResponse(user);
     }
 
-    // =========================================================
     // UPDATE
-    // =========================================================
     public UserResponse updateUser(Long id, UserUpdateRequest dto) {
 
         User existing = getUserEntity(id);
@@ -105,17 +99,13 @@ public class UserService {
         return getUserResponse(id);
     }
 
-    // =========================================================
     // DELETE
-    // =========================================================
     public void removeUser(Long id) {
         User user = getUserEntity(id);
         userRepo.delete(user);
     }
 
-    // =========================================================
     // USER WITH RELATIONSHIPS
-    // =========================================================
     public UserResponse getUserResponse(Long id) {
 
         User user = getUserEntity(id);
@@ -145,14 +135,7 @@ public class UserService {
         return res;
     }
 
-    // =========================================================
     // PRIVATE HELPERS
-    // =========================================================
-
-    /**
-     * Centralized authorization + existence check
-     * Returns entity for internal use only
-     */
     private User getUserEntity(Long id) {
 
         Long currentUserId = SecurityUtils.getCurrentUserId();

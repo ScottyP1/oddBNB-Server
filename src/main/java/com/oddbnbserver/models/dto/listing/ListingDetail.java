@@ -3,6 +3,7 @@ package com.oddbnbserver.models.dto.listing;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalTime;
 import java.util.List;
 
 @Getter
@@ -28,7 +29,8 @@ public class ListingDetail {
     private HostSummary host;
 
     private List<String> imageUrls = List.of();
-
+    private LocalTime checkInTime;
+    private LocalTime checkOutTime;
     private Integer reviewCount;
     private Double rating;
 }

@@ -4,6 +4,7 @@ import com.oddbnbserver.security.JwtAuthFilter;
 import com.oddbnbserver.security.JwtService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -25,9 +26,19 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // PUBLIC
                         .requestMatchers("/auth/**").permitAll()
-                        // EVERYTHING ELSE REQUIRES AUTH
+
+                        // Listing chain
+                        .requestMatchers(HttpMethod.GET, "/listings/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/listings/**").hasAnyRole("HOST", "ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/listings/**").hasAnyRole("HOST", "ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/listings/**").hasAnyRole("HOST", "ADMIN")
+
+                        // Booking chain
+                        .requestMatchers(HttpMethod.GET, "/bookings/**").hasAnyRole("HOST", "ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/bookings/**").hasAnyRole("HOST", "ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/bookings/**").hasAnyRole("HOST", "ADMIN")
+
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(

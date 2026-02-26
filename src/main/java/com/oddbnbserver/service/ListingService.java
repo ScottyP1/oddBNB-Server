@@ -26,9 +26,7 @@ public class ListingService {
         this.userRepo = userRepo;
     }
 
-    // ======================================================
     // CREATE
-    // ======================================================
     public ListingDetail create(CreateListingRequest dto) {
 
         Long userId = SecurityUtils.getCurrentUserId();
@@ -60,6 +58,8 @@ public class ListingService {
         listing.setCapacity(dto.getCapacity());
         listing.setSquareFeet(dto.getSquareFeet());
         listing.setAvailable(dto.isAvailable());
+        listing.setCheckOutTime(dto.getCheckOutTime());
+        listing.setCheckInTime(dto.getCheckInTime());
 
         listing.setHost(host);
 
@@ -68,12 +68,11 @@ public class ListingService {
         return toDetail(saved);
     }
 
-    // ======================================================
     // READ
-    // ======================================================
     public List<ListingSummary> getAllListings() {
         return listingRepo.findAll()
                 .stream()
+                .limit(30)
                 .map(this::toSummary)
                 .toList();
     }
@@ -83,9 +82,7 @@ public class ListingService {
         return toDetail(listing);
     }
 
-    // ======================================================
     // UPDATE (PATCH)
-    // ======================================================
     public ListingDetail updateListing(Long id, UpdateListingRequest dto) {
 
         Listing listing = getListingEntity(id);
@@ -124,24 +121,25 @@ public class ListingService {
         if (dto.getAvailable() != null)
             listing.setAvailable(dto.getAvailable());
 
+        if (dto.getCheckOutTime() != null)
+            listing.setCheckOutTime(dto.getCheckOutTime());
+
+        if (dto.getCheckInTime() != null)
+            listing.setCheckInTime(dto.getCheckInTime());
+
         Listing saved = listingRepo.save(listing);
 
         return toDetail(saved);
     }
 
-    // ======================================================
     // DELETE
-    // ======================================================
     public void removeListing(Long id) {
         Listing listing = getListingEntity(id);
         assertOwnerOrAdmin(listing);
         listingRepo.delete(listing);
     }
 
-    // ======================================================
     // PRIVATE HELPERS
-    // ======================================================
-
     private Listing getListingEntity(Long id) {
         return listingRepo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -174,8 +172,8 @@ public class ListingService {
         s.setCapacity(listing.getCapacity());
 
         List<Review> reviews = listing.getReviews();
-
         int count = reviews.size();
+
         s.setReviewCount(count);
 
         s.setRating(count == 0 ? null :
@@ -183,6 +181,12 @@ public class ListingService {
                         .mapToDouble(Review::getRating)
                         .average()
                         .orElse(0.0));
+
+        if (!listing.getImages().isEmpty()) {
+            s.setThumbnailUrl(
+                    listing.getImages().getFirst().getImageUrl()
+            );
+        }
 
         return s;
     }
@@ -205,6 +209,8 @@ public class ListingService {
         d.setSquareFeet(listing.getSquareFeet());
         d.setCapacity(listing.getCapacity());
         d.setAvailable(listing.isAvailable());
+        d.setCheckInTime(listing.getCheckInTime());
+        d.setCheckOutTime(listing.getCheckOutTime());
 
         User host = listing.getHost();
         if (host != null) {

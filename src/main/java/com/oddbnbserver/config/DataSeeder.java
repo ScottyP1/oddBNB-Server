@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Random;
 
@@ -22,7 +23,7 @@ public class DataSeeder {
     ) {
         return args -> {
 
-            if (listingRepo.count() > 0) return; // prevent reseeding
+            if (listingRepo.count() > 0) return;
 
             Random rand = new Random();
 
@@ -43,7 +44,7 @@ public class DataSeeder {
             List<User> hosts = userRepo.findAll();
 
             // ==============================
-            // 2) CREATE 100 LISTINGS
+            // 2) CREATE LISTINGS
             // ==============================
             for (int i = 1; i <= 100; i++) {
 
@@ -52,7 +53,7 @@ public class DataSeeder {
                 Listing listing = new Listing();
 
                 listing.setTitle("Cozy Stay #" + i);
-                listing.setDescription("Beautiful place to relax and unwind.");
+                listing.setDescription("Beautiful place to relax.");
                 listing.setPricePerNight((double) (50 + rand.nextInt(300)));
                 listing.setLocation(randomCity(rand));
                 listing.setLat(randomLat(rand));
@@ -64,10 +65,12 @@ public class DataSeeder {
                 listing.setAvailable(rand.nextBoolean());
                 listing.setHost(host);
 
-                listingRepo.save(listing);
+                // REQUIRED FIELDS
+                listing.setCheckInTime(LocalTime.of(15, 0));
+                listing.setCheckOutTime(LocalTime.of(11, 0));
 
                 // ==============================
-                // 3) AMENITIES
+                // AMENITIES (ONE ONLY)
                 // ==============================
                 Amenities amenities = new Amenities();
                 amenities.setListing(listing);
@@ -86,7 +89,7 @@ public class DataSeeder {
                 listing.setAmenities(amenities);
 
                 // ==============================
-                // 4) IMAGES (3 each)
+                // IMAGES
                 // ==============================
                 for (int img = 1; img <= 3; img++) {
                     ListingImage image = new ListingImage();
@@ -99,6 +102,9 @@ public class DataSeeder {
                     listing.getImages().add(image);
                 }
 
+                // ==============================
+                // SAVE ONCE
+                // ==============================
                 listingRepo.save(listing);
             }
 
@@ -125,7 +131,7 @@ public class DataSeeder {
     }
 
     private double randomLat(Random rand) {
-        return 25 + rand.nextDouble() * 20; // US-ish range
+        return 25 + rand.nextDouble() * 20;
     }
 
     private double randomLon(Random rand) {

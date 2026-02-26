@@ -17,9 +17,9 @@ import java.time.LocalDate;
 public class Booking {
 
     public enum Status {
-        INACTIVE,
-        ACTIVE,
-        BOOKED
+        PENDING,
+        CONFIRMED,
+        CANCELLED
     }
 
     @Id
@@ -34,15 +34,19 @@ public class Booking {
     @JoinColumn(name = "guest_id", nullable = false)
     private User guest;
 
+    @Column(nullable = false)
     private LocalDate checkIn;
 
+    @Column(nullable = false)
     private LocalDate checkOut;
 
+    @Column(nullable = false)
     private Integer guestsCount;
 
+    @Column(nullable = false)
     private Double totalPrice;
 
     @Enumerated(EnumType.STRING)
-    private Status status = Status.ACTIVE;
+    private Status status = Status.PENDING;
 
 }

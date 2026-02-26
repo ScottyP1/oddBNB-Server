@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,6 +54,12 @@ public class Listing {
 
     @Column(nullable = false)
     private boolean available;
+
+    @Column(nullable = false)
+    private LocalTime checkInTime;
+
+    @Column(nullable = false)
+    private LocalTime checkOutTime;
 
     @ManyToOne
     @JoinColumn(name = "host_id", nullable = false)
