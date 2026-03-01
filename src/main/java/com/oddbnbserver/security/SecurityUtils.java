@@ -1,5 +1,6 @@
 package com.oddbnbserver.security;
 
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -12,8 +13,10 @@ public class SecurityUtils {
         Authentication auth =
                 SecurityContextHolder.getContext().getAuthentication();
 
-        if (auth == null || !auth.isAuthenticated()) {
-            throw new RuntimeException("Not authenticated");
+        if (auth == null
+                || !auth.isAuthenticated()
+                || auth instanceof AnonymousAuthenticationToken) {
+            return null;
         }
 
         Object principal = auth.getPrincipal();
@@ -21,18 +24,16 @@ public class SecurityUtils {
         if (principal instanceof Long id) {
             return id;
         }
+
         if (principal instanceof String str) {
-
-            if ("anonymousUser".equals(str)) {
-                throw new RuntimeException("Not authenticated");
+            try {
+                return Long.parseLong(str);
+            } catch (NumberFormatException e) {
+                return null;
             }
-
-            return Long.parseLong(str);
         }
 
-        assert principal != null;
-        throw new RuntimeException(
-                "Unexpected principal type: " + principal.getClass());
+        return null;
     }
 
     public static boolean isAdmin() {
@@ -40,7 +41,12 @@ public class SecurityUtils {
         Authentication auth =
                 SecurityContextHolder.getContext().getAuthentication();
 
-        assert auth != null;
+        if (auth == null
+                || !auth.isAuthenticated()
+                || auth instanceof AnonymousAuthenticationToken) {
+            return false;
+        }
+
         return auth.getAuthorities().stream()
                 .anyMatch(a -> Objects.equals(a.getAuthority(), "ROLE_ADMIN"));
     }

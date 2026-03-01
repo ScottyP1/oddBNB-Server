@@ -1,6 +1,7 @@
 package com.oddbnbserver.controllers;
 
 import com.oddbnbserver.models.User;
+import com.oddbnbserver.models.dto.auth.AuthResponse;
 import com.oddbnbserver.models.dto.auth.LoginRequest;
 import com.oddbnbserver.models.dto.auth.RegisterRequest;
 import com.oddbnbserver.models.dto.user.UserResponse;
@@ -33,16 +34,26 @@ public class AuthController {
 
 
     @PostMapping("/register")
-    public UserResponse register(@RequestBody RegisterRequest request) {
-        return userService.createNewUser(request);
+    public AuthResponse register(@RequestBody RegisterRequest request) {
+
+        UserResponse newUser = userService.createNewUser(request);
+
+        User user = userRepo.findByEmail(request.getEmail())
+                .orElseThrow();
+
+        String token = jwtService.generateToken(
+                user.getId(),
+                user.getRole().name()
+        );
+
+        return new AuthResponse(token, newUser);
     }
 
     @PostMapping("/login")
-    public String login(@RequestBody LoginRequest request) {
+    public AuthResponse login(@RequestBody LoginRequest request) {
 
         User user = userRepo.findByEmail(request.getEmail())
-                .orElseThrow(() ->
-                        new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (!passwordEncoder.matches(
                 request.getPassword(),
@@ -51,9 +62,13 @@ public class AuthController {
             throw new RuntimeException("Invalid credentials");
         }
 
-        return jwtService.generateToken(
+        String token = jwtService.generateToken(
                 user.getId(),
                 user.getRole().name()
         );
+
+        UserResponse userResponse = userService.toUserResponse(user);
+
+        return new AuthResponse(token, userResponse);
     }
 }

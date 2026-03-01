@@ -9,11 +9,12 @@ import com.oddbnbserver.models.dto.user.UserResponse;
 import com.oddbnbserver.models.dto.user.UserUpdateRequest;
 import com.oddbnbserver.repositories.UserRepo;
 import com.oddbnbserver.security.SecurityUtils;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
 
 @Service
 public class UserService {
@@ -52,6 +53,32 @@ public class UserService {
     public UserResponse getUser(Long id) {
         User user = getUserEntity(id);
         return toResponse(user);
+    }
+
+    public List<UserResponse> getUsers() {
+        return userRepo.findAll()
+                .stream()
+                .limit(50)
+                .map(this::toResponse)
+                .toList();
+    }
+
+    public UserResponse toUserResponse(User user) {
+        return toResponse(user);
+    }
+
+    public UserResponse getCurrentUser() {
+
+        Long currentUserId = SecurityUtils.getCurrentUserId();
+
+        if (currentUserId == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Authentication required"
+            );
+        }
+
+        return getUserResponse(currentUserId);
     }
 
     // UPDATE
@@ -139,6 +166,13 @@ public class UserService {
     private User getUserEntity(Long id) {
 
         Long currentUserId = SecurityUtils.getCurrentUserId();
+
+        if (currentUserId == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Authentication required"
+            );
+        }
 
         if (!currentUserId.equals(id)) {
             throw new ResponseStatusException(
