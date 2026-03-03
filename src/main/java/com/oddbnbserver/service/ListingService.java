@@ -1,18 +1,15 @@
 package com.oddbnbserver.service;
 
-import com.oddbnbserver.models.Listing;
-import com.oddbnbserver.models.Review;
-import com.oddbnbserver.models.User;
+import com.oddbnbserver.models.*;
 import com.oddbnbserver.models.dto.listing.*;
-import com.oddbnbserver.models.dto.listing.HostSummary;
 import com.oddbnbserver.repositories.ListingRepo;
 import com.oddbnbserver.repositories.UserRepo;
 import com.oddbnbserver.security.SecurityUtils;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -26,7 +23,10 @@ public class ListingService {
         this.userRepo = userRepo;
     }
 
+    // =====================================================
     // CREATE
+    // =====================================================
+
     public ListingDetail create(CreateListingRequest dto) {
 
         Long userId = SecurityUtils.getCurrentUserId();
@@ -37,7 +37,6 @@ public class ListingService {
 
         if (host.getRole() != User.Role.HOST &&
                 host.getRole() != User.Role.ADMIN) {
-
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
                     "Only hosts can create listings");
@@ -50,25 +49,44 @@ public class ListingService {
         listing.setPricePerNight(dto.getPricePerNight());
         listing.setLocation(dto.getLocation());
 
-        listing.setLat(dto.getLat());
-        listing.setLon(dto.getLon());
+        listing.setLat(dto.getLat() != null ? dto.getLat() : 0.0);
+        listing.setLon(dto.getLon() != null ? dto.getLon() : 0.0);
 
         listing.setBeds(dto.getBeds());
         listing.setBaths(dto.getBaths());
         listing.setCapacity(dto.getCapacity());
         listing.setSquareFeet(dto.getSquareFeet());
         listing.setAvailable(dto.isAvailable());
-        listing.setCheckOutTime(dto.getCheckOutTime());
         listing.setCheckInTime(dto.getCheckInTime());
+        listing.setCheckOutTime(dto.getCheckOutTime());
 
         listing.setHost(host);
+
+        Amenities amenities = new Amenities();
+        amenities.setListing(listing);
+
+        if (dto.getAmenities() != null) {
+            applyAmenities(amenities, dto.getAmenities());
+        }
+
+        listing.setAmenities(amenities);
+
+        // ---- Images ----
+        if (dto.getImageUrls() != null) {
+            dto.getImageUrls().forEach(url -> {
+                ListingImage img = new ListingImage();
+                img.setImageUrl(url);
+                img.setListing(listing);
+                listing.getImages().add(img);
+            });
+        }
 
         Listing saved = listingRepo.save(listing);
 
         return toDetail(saved);
     }
 
-    // READ
+
     public List<ListingSummary> getAllListings() {
         return listingRepo.findAll()
                 .stream()
@@ -78,11 +96,10 @@ public class ListingService {
     }
 
     public ListingDetail getListingDetail(Long id) {
-        Listing listing = getListingEntity(id);
-        return toDetail(listing);
+        return toDetail(getListingEntity(id));
     }
 
-    // UPDATE (PATCH)
+
     public ListingDetail updateListing(Long id, UpdateListingRequest dto) {
 
         Listing listing = getListingEntity(id);
@@ -121,25 +138,38 @@ public class ListingService {
         if (dto.getAvailable() != null)
             listing.setAvailable(dto.getAvailable());
 
+        if (dto.getCheckInTime() != null)
+            listing.setCheckInTime(dto.getCheckInTime());
+
         if (dto.getCheckOutTime() != null)
             listing.setCheckOutTime(dto.getCheckOutTime());
 
-        if (dto.getCheckInTime() != null)
-            listing.setCheckInTime(dto.getCheckInTime());
+        if (dto.getAmenities() != null) {
+
+            Amenities amenities = listing.getAmenities();
+
+            if (amenities == null) {
+                amenities = new Amenities();
+                amenities.setListing(listing);
+                listing.setAmenities(amenities);
+            }
+
+            applyAmenities(amenities, dto.getAmenities());
+        }
 
         Listing saved = listingRepo.save(listing);
 
         return toDetail(saved);
     }
 
-    // DELETE
+
     public void removeListing(Long id) {
         Listing listing = getListingEntity(id);
         assertOwnerOrAdmin(listing);
         listingRepo.delete(listing);
     }
 
-    // PRIVATE HELPERS
+
     private Listing getListingEntity(Long id) {
         return listingRepo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -160,6 +190,20 @@ public class ListingService {
         }
     }
 
+    private void applyAmenities(Amenities amenities, List<String> reqAmenities) {
+
+        amenities.setWifi(reqAmenities.contains("wifi"));
+        amenities.setTv(reqAmenities.contains("tv"));
+        amenities.setKitchen(reqAmenities.contains("kitchen"));
+        amenities.setWasher(reqAmenities.contains("washer"));
+        amenities.setDryer(reqAmenities.contains("dryer"));
+        amenities.setPetsAllowed(reqAmenities.contains("petsAllowed"));
+        amenities.setSmokeAlarm(reqAmenities.contains("smokeAlarm"));
+        amenities.setDesertView(reqAmenities.contains("desertView"));
+        amenities.setMountainView(reqAmenities.contains("mountainView"));
+        amenities.setValleyView(reqAmenities.contains("valleyView"));
+    }
+
     private ListingSummary toSummary(Listing listing) {
 
         ListingSummary s = new ListingSummary();
@@ -175,7 +219,6 @@ public class ListingService {
         int count = reviews.size();
 
         s.setReviewCount(count);
-
         s.setRating(count == 0 ? null :
                 reviews.stream()
                         .mapToDouble(Review::getRating)
@@ -224,20 +267,38 @@ public class ListingService {
         d.setImageUrls(
                 listing.getImages()
                         .stream()
-                        .map(img -> img.getImageUrl())
+                        .map(ListingImage::getImageUrl)
                         .toList()
         );
 
         List<Review> reviews = listing.getReviews();
-
         int count = reviews.size();
-        d.setReviewCount(count);
 
+        d.setReviewCount(count);
         d.setRating(count == 0 ? null :
                 reviews.stream()
                         .mapToDouble(Review::getRating)
                         .average()
                         .orElse(0.0));
+
+        // ---- Amenities ----
+        Amenities a = listing.getAmenities();
+        if (a != null) {
+            List<String> amenities = new ArrayList<>();
+
+            if (a.isWifi()) amenities.add("wifi");
+            if (a.isTv()) amenities.add("tv");
+            if (a.isKitchen()) amenities.add("kitchen");
+            if (a.isWasher()) amenities.add("washer");
+            if (a.isDryer()) amenities.add("dryer");
+            if (a.isPetsAllowed()) amenities.add("petsAllowed");
+            if (a.isSmokeAlarm()) amenities.add("smokeAlarm");
+            if (a.isDesertView()) amenities.add("desertView");
+            if (a.isMountainView()) amenities.add("mountainView");
+            if (a.isValleyView()) amenities.add("valleyView");
+
+            d.setAmenities(amenities);
+        }
 
         return d;
     }

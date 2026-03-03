@@ -28,9 +28,10 @@ public class ListingDetail {
 
     private HostSummary host;
 
-    private List<String> imageUrls = List.of();
     private LocalTime checkInTime;
     private LocalTime checkOutTime;
     private Integer reviewCount;
     private Double rating;
+    private List<String> amenities;
+    private List<String> imageUrls;
 }

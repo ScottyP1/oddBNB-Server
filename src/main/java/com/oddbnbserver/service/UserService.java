@@ -81,6 +81,23 @@ public class UserService {
         return getUserResponse(currentUserId);
     }
 
+    public User getCurrentUserEntity() {
+        Long currentUserId = SecurityUtils.getCurrentUserId();
+
+        if (currentUserId == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Authentication required"
+            );
+        }
+
+        return userRepo.findById(currentUserId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "User not found"
+                ));
+    }
+
     // UPDATE
     public UserResponse updateUser(Long id, UserUpdateRequest dto) {
 

@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -24,4 +25,7 @@ public class UpdateListingRequest {
     private LocalTime checkInTime;
     private LocalTime checkOutTime;
     private Boolean available;
+
+    private List<String> imageUrls;
+    private List<String> amenities;
 }

@@ -1,9 +1,11 @@
 package com.oddbnbserver.controllers;
 
-import com.oddbnbserver.models.Favorite;
+import com.oddbnbserver.models.dto.favorite.FavoriteSummary;
 import com.oddbnbserver.service.FavoriteService;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/favorites")
@@ -15,24 +17,15 @@ public class FavoriteController {
         this.favoriteService = favoriteService;
     }
 
-    // CREATE
-    @PostMapping
-    @PreAuthorize("#id == authentication.principal or hasRole('ADMIN')")
-    public Favorite create(@RequestBody Favorite favorite) {
-        return favoriteService.create(favorite);
+    @GetMapping
+    public List<FavoriteSummary> getFavorites() {
+        return favoriteService.getFavoritesForCurrentUser();
     }
 
-    // READ
-    @GetMapping("/{id}")
-    @PreAuthorize("#id == authentication.principal or hasRole('ADMIN')")
-    public Favorite getReview(@PathVariable Long id) {
-        return favoriteService.getFavorite(id);
+    @PostMapping("/{listingId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void addFavorite(@PathVariable Long listingId) {
+        favoriteService.toggleFavorite(listingId);
     }
 
-    // DELETE
-    @DeleteMapping("/{id}")
-    @PreAuthorize("#id == authentication.principal or hasRole('ADMIN')")
-    public void deleteReview(@PathVariable Long id) {
-        favoriteService.removeFavorite(id);
-    }
 }

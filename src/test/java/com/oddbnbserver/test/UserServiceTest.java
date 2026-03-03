@@ -65,9 +65,6 @@ class UserServiceTest {
         SecurityContextHolder.clearContext();
     }
 
-    // =====================================================
-    // SUCCESS CASE
-    // =====================================================
     @Test
     void shouldReturnUserWhenFound() {
 
@@ -83,9 +80,6 @@ class UserServiceTest {
         assertEquals(User.Role.ADMIN, result.getRole());
     }
 
-    // =====================================================
-    // NOT FOUND CASE
-    // =====================================================
     @Test
     void shouldThrowWhenUserNotFound() {
 
@@ -101,14 +95,8 @@ class UserServiceTest {
         assertEquals("User not found", ex.getReason());
     }
 
-    // =====================================================
-    // FORBIDDEN CASE
-    // =====================================================
     @Test
     void shouldThrowWhenAccessingDifferentUser() {
-
-        when(userRepo.findById(2L))
-                .thenReturn(Optional.of(user));
 
         ResponseStatusException ex = assertThrows(
                 ResponseStatusException.class,
