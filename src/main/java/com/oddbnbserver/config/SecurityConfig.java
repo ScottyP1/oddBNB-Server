@@ -35,6 +35,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/register", "/auth/login").permitAll()
+
+                        .requestMatchers(HttpMethod.POST, "/uploads/**").permitAll()
                         
                         .requestMatchers(HttpMethod.GET, "/listings/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/listings/**").hasAnyRole("HOST", "ADMIN")
