@@ -32,6 +32,12 @@ public class ListingController {
         return listingService.getAllListings();
     }
 
+    // Get owned listings
+    @GetMapping("/owned")
+    public List<ListingSummary> getAllOwnedListings() {
+        return listingService.getAllOwnedListings();
+    }
+
     @GetMapping("/{id}")
     public ListingDetail getListing(@PathVariable Long id) {
         return listingService.getListingDetail(id);

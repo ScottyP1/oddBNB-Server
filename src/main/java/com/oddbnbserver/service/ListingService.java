@@ -95,10 +95,18 @@ public class ListingService {
                 .toList();
     }
 
+    public List<ListingSummary> getAllOwnedListings() {
+        Long userId = SecurityUtils.getCurrentUserId();
+
+        return listingRepo.findByHostId(userId)
+                .stream()
+                .map(this::toSummary)
+                .toList();
+    }
+
     public ListingDetail getListingDetail(Long id) {
         return toDetail(getListingEntity(id));
     }
-
 
     public ListingDetail updateListing(Long id, UpdateListingRequest dto) {
 
@@ -204,7 +212,7 @@ public class ListingService {
         amenities.setValleyView(reqAmenities.contains("valleyView"));
     }
 
-    private ListingSummary toSummary(Listing listing) {
+    public ListingSummary toSummary(Listing listing) {
 
         ListingSummary s = new ListingSummary();
 
@@ -226,7 +234,7 @@ public class ListingService {
                         .orElse(0.0));
 
         if (!listing.getImages().isEmpty()) {
-            s.setThumbnailUrl(
+            s.setImageUrl(
                     listing.getImages().getFirst().getImageUrl()
             );
         }

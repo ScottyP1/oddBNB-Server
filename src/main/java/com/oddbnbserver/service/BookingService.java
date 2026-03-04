@@ -10,7 +10,9 @@ import com.oddbnbserver.repositories.BookingRepo;
 import com.oddbnbserver.repositories.ListingRepo;
 import com.oddbnbserver.repositories.UserRepo;
 import com.oddbnbserver.security.SecurityUtils;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -33,13 +35,15 @@ public class BookingService {
         this.userRepo = userRepo;
     }
 
-    // =============================
-    // CREATE
-    // =============================
     public BookingSummary create(CreateBookingRequest req) {
 
         Long userId = SecurityUtils.getCurrentUserId();
-
+        if (userId == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "User must be logged in to create a booking"
+            );
+        }
         Listing listing = listingRepo.findById(req.getListingId())
                 .orElseThrow(() -> new RuntimeException("Listing not found"));
 
@@ -70,9 +74,6 @@ public class BookingService {
         return toSummary(saved, nights, price, "Booking confirmed");
     }
 
-    // =============================
-    // READ
-    // =============================
     public BookingSummary getBooking(Long id) {
 
         Booking booking = getBookingEntity(id);
@@ -109,23 +110,32 @@ public class BookingService {
                 .toList();
     }
 
-    // =============================
-    // UPDATE
-    // =============================
-    public BookingSummary updateBooking(Long id,
-                                        UpdateBookingRequest req) {
-
-        Booking existing = getBookingEntity(id); // ✅ FIXED
+    public BookingSummary updateBooking(Long id, UpdateBookingRequest req) {
 
         Long userId = SecurityUtils.getCurrentUserId();
+        Booking existing = getBookingEntity(id);
 
-        if (!existing.getGuest().getId().equals(userId)
-                && !SecurityUtils.isAdmin()) {
-            throw new RuntimeException("Forbidden");
+        boolean isGuest = existing.getGuest().getId().equals(userId);
+        boolean isHost = existing.getListing().getHost().getId().equals(userId);
+
+        if (!isGuest && !isHost && !SecurityUtils.isAdmin()) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "You are not allowed to update this booking"
+            );
         }
 
-        LocalDate start = req.getCheckIn();
-        LocalDate end = req.getCheckOut();
+        LocalDate start = req.getCheckIn() != null
+                ? req.getCheckIn()
+                : existing.getCheckIn();
+
+        LocalDate end = req.getCheckOut() != null
+                ? req.getCheckOut()
+                : existing.getCheckOut();
+
+        Integer guests = req.getGuestsCount() != null
+                ? req.getGuestsCount()
+                : existing.getGuestsCount();
 
         validateDates(start, end);
 
@@ -143,7 +153,7 @@ public class BookingService {
 
         existing.setCheckIn(start);
         existing.setCheckOut(end);
-        existing.setGuestsCount(req.getGuestsCount());
+        existing.setGuestsCount(guests);
         existing.setTotalPrice(price);
 
         Booking saved = bookingRepo.save(existing);
@@ -151,21 +161,33 @@ public class BookingService {
         return toSummary(saved, nights, price, "Booking updated");
     }
 
-    // =============================
-    // DELETE
-    // =============================
+
     public void removeBooking(Long id) {
-        bookingRepo.delete(getBookingEntity(id)); // ✅ FIXED
+
+        Long userId = SecurityUtils.getCurrentUserId();
+
+        Booking booking = getBookingEntity(id);
+
+        boolean isGuest = booking.getGuest().getId().equals(userId);
+        boolean isHost = booking.getListing().getHost().getId().equals(userId);
+
+        if (!isGuest && !isHost && !SecurityUtils.isAdmin()) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "You are not allowed to delete this booking"
+            );
+        }
+
+        bookingRepo.delete(booking);
     }
 
-    // =============================
-    // PRIVATE HELPERS
-    // =============================
     private Booking getBookingEntity(Long id) {
         return bookingRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Booking not found"));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Booking not found"));
     }
-    
+
     private void validateDates(LocalDate start, LocalDate end) {
         if (!start.isBefore(end)) {
             throw new RuntimeException("Invalid date range");
@@ -181,7 +203,10 @@ public class BookingService {
                         listingId, end, start);
 
         if (exists) {
-            throw new RuntimeException("Listing already booked");
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Listing already booked for selected dates"
+            );
         }
     }
 
@@ -195,7 +220,10 @@ public class BookingService {
                         listingId, end, start, bookingId);
 
         if (exists) {
-            throw new RuntimeException("Listing already booked");
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Listing already booked for selected dates"
+            );
         }
     }
 

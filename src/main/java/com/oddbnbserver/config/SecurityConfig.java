@@ -36,16 +36,17 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/register", "/auth/login").permitAll()
 
-                        .requestMatchers(HttpMethod.POST, "/uploads/**").permitAll()
-                        
+                        .requestMatchers(HttpMethod.POST, "/uploads/**").hasAnyRole("HOST", "ADMIN")
+
                         .requestMatchers(HttpMethod.GET, "/listings/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/listings/**").hasAnyRole("HOST", "ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/listings/**").hasAnyRole("HOST", "ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/listings/**").hasAnyRole("HOST", "ADMIN")
 
-                        .requestMatchers(HttpMethod.GET, "/bookings/**").hasAnyRole("HOST", "ADMIN")
-                        .requestMatchers(HttpMethod.PATCH, "/bookings/**").hasAnyRole("HOST", "ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/bookings/**").hasAnyRole("HOST", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/bookings/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/bookings/**").permitAll()
+                        .requestMatchers(HttpMethod.PATCH, "/bookings/**").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/bookings/**").permitAll()
 
                         .anyRequest().authenticated()
                 )

@@ -20,13 +20,11 @@ public class BookingController {
     }
 
     @PostMapping
-    @PreAuthorize("isAuthenticated()")
     public BookingSummary create(@RequestBody CreateBookingRequest req) {
         return bookingService.create(req);
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
     public BookingSummary getBooking(@PathVariable Long id) {
         return bookingService.getBooking(id);
     }
@@ -38,7 +36,6 @@ public class BookingController {
     }
 
     @PatchMapping("/{id}")
-    @PreAuthorize("hasAnyRole('HOST','ADMIN')")
     public BookingSummary updateBooking(
             @PathVariable Long id,
             @RequestBody UpdateBookingRequest bookingUpdate) {
@@ -47,7 +44,7 @@ public class BookingController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('HOST','ADMIN')")
     public void deleteBooking(@PathVariable Long id) {
         bookingService.removeBooking(id);
     }
