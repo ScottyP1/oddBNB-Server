@@ -96,7 +96,7 @@ public class ListingService {
     }
 
     public List<ListingSummary> getAllOwnedListings() {
-        Long userId = SecurityUtils.getCurrentUserId();
+        Long userId = SecurityUtils.getRequiredUserId();
 
         return listingRepo.findByHostId(userId)
                 .stream()

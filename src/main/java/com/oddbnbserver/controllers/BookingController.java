@@ -29,6 +29,11 @@ public class BookingController {
         return bookingService.getBooking(id);
     }
 
+    @GetMapping("/user")
+    public List<BookingSummary> getUserBookings() {
+        return bookingService.getCurrentUserBookings();
+    }
+
     @GetMapping
     @PreAuthorize("hasAnyRole('HOST','ADMIN')")
     public List<BookingSummary> getAllBookings() {

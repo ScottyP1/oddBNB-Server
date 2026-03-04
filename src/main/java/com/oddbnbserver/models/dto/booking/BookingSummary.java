@@ -13,6 +13,8 @@ public class BookingSummary {
 
     private Long listingId;
 
+    private String title;
+
     private LocalDate checkIn;
 
     private LocalDate checkOut;
@@ -26,4 +28,6 @@ public class BookingSummary {
     private String status;
 
     private String message;
+    
+    private String imageUrl;
 }

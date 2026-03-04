@@ -4,6 +4,7 @@ import com.oddbnbserver.models.Booking;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public interface BookingRepo extends JpaRepository<Booking, Long> {
     boolean existsByListingIdAndCheckInLessThanAndCheckOutGreaterThan(
@@ -14,4 +15,7 @@ public interface BookingRepo extends JpaRepository<Booking, Long> {
 
     boolean existsByListingIdAndCheckInLessThanAndCheckOutGreaterThanAndIdNot(Long listingId, LocalDate end, LocalDate start, Long bookingId);
 
+    List<Booking> findByGuest_Id(Long guestId);
+
+    List<Booking> findByListing_Id(Long listingId);
 }
