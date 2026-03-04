@@ -20,5 +20,5 @@ public class UserResponse {
     private List<Long> hostedListingIds = List.of();
     private List<Long> reviewIds = List.of();
     private List<Long> favoriteIds = List.of();
-
+    private List<Long> bookingIds = List.of();
 }

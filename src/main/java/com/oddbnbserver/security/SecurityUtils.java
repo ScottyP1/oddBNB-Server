@@ -1,8 +1,10 @@
 package com.oddbnbserver.security;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Objects;
 
@@ -34,6 +36,20 @@ public class SecurityUtils {
         }
 
         return null;
+    }
+
+    public static Long getRequiredUserId() {
+
+        Long id = getCurrentUserId();
+
+        if (id == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Authentication required"
+            );
+        }
+
+        return id;
     }
 
     public static boolean isAdmin() {

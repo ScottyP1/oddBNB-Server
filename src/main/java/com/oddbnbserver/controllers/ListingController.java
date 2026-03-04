@@ -1,8 +1,12 @@
 package com.oddbnbserver.controllers;
 
-import com.oddbnbserver.models.dto.listing.*;
+import com.oddbnbserver.models.dto.booking.BookingSummary;
+import com.oddbnbserver.models.dto.listing.CreateListingRequest;
+import com.oddbnbserver.models.dto.listing.ListingDetail;
+import com.oddbnbserver.models.dto.listing.ListingSummary;
+import com.oddbnbserver.models.dto.listing.UpdateListingRequest;
+import com.oddbnbserver.service.BookingService;
 import com.oddbnbserver.service.ListingService;
-
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,9 +17,11 @@ import java.util.List;
 public class ListingController {
 
     private final ListingService listingService;
+    private final BookingService bookingService;
 
-    public ListingController(ListingService listingService) {
+    public ListingController(ListingService listingService, BookingService bookingService) {
         this.listingService = listingService;
+        this.bookingService = bookingService;
     }
 
     // CREATE
@@ -41,6 +47,11 @@ public class ListingController {
     @GetMapping("/{id}")
     public ListingDetail getListing(@PathVariable Long id) {
         return listingService.getListingDetail(id);
+    }
+
+    @GetMapping("/{id}/bookings")
+    public List<BookingSummary> getListingBookings(@PathVariable Long id) {
+        return bookingService.getBookingsForListing(id);
     }
 
     // UPDATE

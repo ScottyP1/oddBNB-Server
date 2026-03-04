@@ -37,13 +37,9 @@ public class BookingService {
 
     public BookingSummary create(CreateBookingRequest req) {
 
-        Long userId = SecurityUtils.getCurrentUserId();
-        if (userId == null) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "User must be logged in to create a booking"
-            );
-        }
+        Long userId = SecurityUtils.getRequiredUserId();
+
+
         Listing listing = listingRepo.findById(req.getListingId())
                 .orElseThrow(() -> new RuntimeException("Listing not found"));
 
@@ -91,6 +87,56 @@ public class BookingService {
         );
     }
 
+    public List<BookingSummary> getBookingsForUser(Long userId) {
+
+        List<Booking> bookings = bookingRepo.findByGuest_Id(userId);
+
+        return bookings.stream()
+                .map(b -> {
+                    long nights = ChronoUnit.DAYS.between(
+                            b.getCheckIn(),
+                            b.getCheckOut()
+                    );
+
+                    return toSummary(
+                            b,
+                            nights,
+                            b.getTotalPrice(),
+                            null
+                    );
+                })
+                .toList();
+    }
+
+
+    public List<BookingSummary> getCurrentUserBookings() {
+
+        Long userId = SecurityUtils.getRequiredUserId();
+
+        return getBookingsForUser(userId);
+    }
+
+    public List<BookingSummary> getBookingsForListing(Long id) {
+
+        List<Booking> bookings = bookingRepo.findByListing_Id(id);
+
+        return bookings.stream()
+                .map(b -> {
+                    long nights = ChronoUnit.DAYS.between(
+                            b.getCheckIn(),
+                            b.getCheckOut()
+                    );
+
+                    return toSummary(
+                            b,
+                            nights,
+                            b.getTotalPrice(),
+                            null
+                    );
+                })
+                .toList();
+    }
+
     public List<BookingSummary> getAllBookings() {
 
         return bookingRepo.findAll()
@@ -112,7 +158,7 @@ public class BookingService {
 
     public BookingSummary updateBooking(Long id, UpdateBookingRequest req) {
 
-        Long userId = SecurityUtils.getCurrentUserId();
+        Long userId = SecurityUtils.getRequiredUserId();
         Booking existing = getBookingEntity(id);
 
         boolean isGuest = existing.getGuest().getId().equals(userId);
@@ -164,7 +210,7 @@ public class BookingService {
 
     public void removeBooking(Long id) {
 
-        Long userId = SecurityUtils.getCurrentUserId();
+        Long userId = SecurityUtils.getRequiredUserId();
 
         Booking booking = getBookingEntity(id);
 
@@ -243,6 +289,14 @@ public class BookingService {
         res.setTotalPrice(price);
         res.setStatus(booking.getStatus().name());
         res.setMessage(message);
+
+        Listing listing = booking.getListing();
+
+        res.setTitle(listing.getTitle());
+
+        if (listing.getImages() != null && !listing.getImages().isEmpty()) {
+            res.setImageUrl(listing.getImages().getFirst().getImageUrl());
+        }
 
         return res;
     }

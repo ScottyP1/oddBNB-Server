@@ -1,12 +1,10 @@
 package com.oddbnbserver.service;
 
-import com.oddbnbserver.models.Favorite;
-import com.oddbnbserver.models.Listing;
-import com.oddbnbserver.models.Review;
-import com.oddbnbserver.models.User;
+import com.oddbnbserver.models.*;
 import com.oddbnbserver.models.dto.auth.RegisterRequest;
 import com.oddbnbserver.models.dto.user.UserResponse;
 import com.oddbnbserver.models.dto.user.UserUpdateRequest;
+import com.oddbnbserver.repositories.BookingRepo;
 import com.oddbnbserver.repositories.UserRepo;
 import com.oddbnbserver.security.SecurityUtils;
 import org.springframework.http.HttpStatus;
@@ -21,10 +19,12 @@ public class UserService {
 
     private final UserRepo userRepo;
     private final PasswordEncoder passwordEncoder;
+    private final BookingRepo bookingRepo;
 
-    public UserService(UserRepo userRepo, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepo userRepo, PasswordEncoder passwordEncoder, BookingRepo bookingRepo) {
         this.userRepo = userRepo;
         this.passwordEncoder = passwordEncoder;
+        this.bookingRepo = bookingRepo;
     }
 
     // CREATE
@@ -69,29 +69,15 @@ public class UserService {
 
     public UserResponse getCurrentUser() {
 
-        Long currentUserId = SecurityUtils.getCurrentUserId();
+        Long userId = SecurityUtils.getRequiredUserId();
 
-        if (currentUserId == null) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Authentication required"
-            );
-        }
-
-        return getUserResponse(currentUserId);
+        return getUserResponse(userId);
     }
 
     public User getCurrentUserEntity() {
-        Long currentUserId = SecurityUtils.getCurrentUserId();
+        Long userId = SecurityUtils.getRequiredUserId();
 
-        if (currentUserId == null) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Authentication required"
-            );
-        }
-
-        return userRepo.findById(currentUserId)
+        return userRepo.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "User not found"
@@ -176,22 +162,21 @@ public class UserService {
                         .toList()
         );
 
+        res.setBookingIds(
+                bookingRepo.findByGuest_Id(user.getId())
+                        .stream()
+                        .map(Booking::getId)
+                        .toList()
+        );
         return res;
     }
 
     // PRIVATE HELPERS
     private User getUserEntity(Long id) {
 
-        Long currentUserId = SecurityUtils.getCurrentUserId();
+        Long userId = SecurityUtils.getRequiredUserId();
 
-        if (currentUserId == null) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Authentication required"
-            );
-        }
-
-        if (!currentUserId.equals(id)) {
+        if (!userId.equals(id)) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
                     "You cannot access another user's data"
@@ -205,9 +190,6 @@ public class UserService {
                 ));
     }
 
-    /**
-     * Entity → DTO mapping
-     */
     private UserResponse toResponse(User user) {
 
         UserResponse res = new UserResponse();
