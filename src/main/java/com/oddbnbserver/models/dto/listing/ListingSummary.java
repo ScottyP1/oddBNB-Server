@@ -16,5 +16,5 @@ public class ListingSummary {
 
     private Integer reviewCount;
     private Double rating;
-    private String thumbnailUrl;
+    private String imageUrl;
 }

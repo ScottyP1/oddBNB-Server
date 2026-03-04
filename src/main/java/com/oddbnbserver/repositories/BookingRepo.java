@@ -13,4 +13,5 @@ public interface BookingRepo extends JpaRepository<Booking, Long> {
     );
 
     boolean existsByListingIdAndCheckInLessThanAndCheckOutGreaterThanAndIdNot(Long listingId, LocalDate end, LocalDate start, Long bookingId);
+
 }
