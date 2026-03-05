@@ -43,8 +43,8 @@ public class UploadController {
         var presignedRequest = presigner.presignPutObject(presignRequest);
 
         String uploadUrl = presignedRequest.url().toString();
-        String fileUrl = "https://" + bucketName + ".s3.us-east-2.amazonaws.com/" + key;
-        
+        String fileUrl = "https://" + bucketName + ".s3.us-east-1.amazonaws.com/" + key;
+
         return Map.of(
                 "uploadUrl", uploadUrl,
                 "fileUrl", fileUrl
