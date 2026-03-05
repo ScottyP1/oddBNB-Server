@@ -28,7 +28,7 @@ public class UploadController {
 
         String key = "listings/" + UUID.randomUUID() + "-" + fileName;
 
-        String bucketName = "oddbnb-images";
+        String bucketName = "oddbnb-images-bucket";
         PutObjectRequest objectRequest = PutObjectRequest.builder()
                 .bucket(bucketName)
                 .key(key)
