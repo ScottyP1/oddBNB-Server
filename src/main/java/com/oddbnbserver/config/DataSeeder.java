@@ -26,6 +26,20 @@ public class DataSeeder {
 
             Random rand = new Random();
 
+            Optional<User> existingAdmin = userRepo.findByEmail("admin@oddbnb.com");
+
+            if (existingAdmin.isEmpty()) {
+
+                User admin = new User();
+
+                admin.setFirstName("Admin");
+                admin.setLastName("User");
+                admin.setEmail("admin@oddbnb.com");
+                admin.setPasswordHash(encoder.encode("password"));
+                admin.setRole(User.Role.ADMIN);
+
+                userRepo.save(admin);
+            }
             // ==============================
             // CREATE HOSTS
             // ==============================
