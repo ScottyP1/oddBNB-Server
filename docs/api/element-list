@@ -1,0 +1,14 @@
+com.oddbnbserver
+com.oddbnbserver.config
+com.oddbnbserver.controllers
+com.oddbnbserver.models
+com.oddbnbserver.models.dto.auth
+com.oddbnbserver.models.dto.booking
+com.oddbnbserver.models.dto.favorite
+com.oddbnbserver.models.dto.listing
+com.oddbnbserver.models.dto.review
+com.oddbnbserver.models.dto.user
+com.oddbnbserver.repositories
+com.oddbnbserver.security
+com.oddbnbserver.service
+com.oddbnbserver.test
