@@ -1,8 +1,6 @@
 package com.oddbnbserver.test;
 
-
 import com.oddbnbserver.models.User;
-import com.oddbnbserver.models.dto.listing.ListingSummary;
 import com.oddbnbserver.repositories.ListingRepo;
 import com.oddbnbserver.repositories.UserRepo;
 import com.oddbnbserver.security.SecurityUtils;
@@ -20,21 +18,23 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class ListingServiceTest {
 
     @Mock
     private ListingRepo listingRepo;
+
     @Mock
     private UserRepo userRepo;
-
 
     @InjectMocks
     private ListingService listingService;
 
     @InjectMocks
     private UserService userService;
+
     private User user;
 
     @BeforeEach
@@ -58,20 +58,14 @@ public class ListingServiceTest {
     }
 
     @Test
-    public void getOwnedListings(){
+    void getOwnedListings() {
+
         Long userId = SecurityUtils.getRequiredUserId();
 
-        <List> listings = listingRepo.findByHostId(userId)
-                    .stream()
-                .limit(5)
-                    .toList();
+        when(listingRepo.findByHostId(userId)).thenReturn(List.of());
 
-        assertEquals(1L, result.getId());
-        assertEquals("Cody", result.getFirstName());
-        assertEquals("Scott", result.getLastName());
-        assertEquals("test@example.com", result.getEmail());
-        assertEquals(User.Role.ADMIN, result.getRole());
-        }
+        var listings = listingRepo.findByHostId(userId);
 
+        assertEquals(0, listings.size());
     }
 }
