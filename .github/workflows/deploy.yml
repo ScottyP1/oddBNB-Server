@@ -27,7 +27,7 @@ jobs:
 
       # Build Spring Boot jar
       - name: Build Java app
-        run: mvn clean package -DskipTests
+        run: mvn clean package
 
       # Configure AWS credentials using OIDC
       - name: Configure AWS credentials
