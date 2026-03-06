@@ -9,8 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalTime;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 @Configuration
 public class DataSeeder {
@@ -28,10 +27,12 @@ public class DataSeeder {
             Random rand = new Random();
 
             // ==============================
-            // 1) CREATE HOST USERS
+            // CREATE HOSTS
             // ==============================
             for (int i = 1; i <= 5; i++) {
+
                 User host = new User();
+
                 host.setFirstName("Host" + i);
                 host.setLastName("User");
                 host.setEmail("host" + i + "@oddbnb.com");
@@ -44,46 +45,120 @@ public class DataSeeder {
             List<User> hosts = userRepo.findAll();
 
             // ==============================
-            // 2) CREATE LISTINGS
+            // LISTING TEMPLATES
             // ==============================
-            for (int i = 1; i <= 100; i++) {
 
+            List<ListingTemplate> templates = List.of(
+
+                    new ListingTemplate(
+                            "Modern Desert Retreat",
+                            "Scottsdale, AZ",
+                            33.4942, -111.9261,
+                            "Luxury desert home with floor-to-ceiling windows overlooking the Sonoran landscape.",
+                            List.of(
+                                    "https://images.unsplash.com/photo-1600585154340-be6161a56a0c",
+                                    "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d",
+                                    "https://images.unsplash.com/photo-1560185127-6ed189bf02f4"
+                            )
+                    ),
+
+                    new ListingTemplate(
+                            "Mountain Cabin Escape",
+                            "Aspen, CO",
+                            39.1911, -106.8175,
+                            "Cozy cabin tucked into the Rocky Mountains with wood burning fireplace and forest views.",
+                            List.of(
+                                    "https://images.unsplash.com/photo-1518780664697-55e3ad937233",
+                                    "https://images.unsplash.com/photo-1601918774946-25832a4be0d6",
+                                    "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85"
+                            )
+                    ),
+
+                    new ListingTemplate(
+                            "Oceanfront Glass House",
+                            "Malibu, CA",
+                            34.0259, -118.7798,
+                            "Minimalist beachfront home with panoramic ocean views and private deck.",
+                            List.of(
+                                    "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85",
+                                    "https://images.unsplash.com/photo-1600585154526-990dced4db0d",
+                                    "https://images.unsplash.com/photo-1600047509782-20d39509f26d"
+                            )
+                    ),
+
+                    new ListingTemplate(
+                            "Urban Loft in Downtown",
+                            "Chicago, IL",
+                            41.8781, -87.6298,
+                            "Industrial loft with exposed brick, skyline views, and walking distance to restaurants.",
+                            List.of(
+                                    "https://images.unsplash.com/photo-1493809842364-78817add7ffb",
+                                    "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688",
+                                    "https://images.unsplash.com/photo-1560448075-bb4caa6b1279"
+                            )
+                    ),
+
+                    new ListingTemplate(
+                            "Forest Treehouse Retreat",
+                            "Portland, OR",
+                            45.5152, -122.6784,
+                            "Hand-built treehouse surrounded by towering pines with peaceful forest views.",
+                            List.of(
+                                    "https://images.unsplash.com/photo-1505691938895-1758d7feb511",
+                                    "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3",
+                                    "https://images.unsplash.com/photo-1505692794403-34d4982e38fa"
+                            )
+                    )
+            );
+
+            // ==============================
+            // GENERATE LISTINGS
+            // ==============================
+
+            for (int i = 0; i < 100; i++) {
+
+                ListingTemplate template = templates.get(rand.nextInt(templates.size()));
                 User host = hosts.get(rand.nextInt(hosts.size()));
 
                 Listing listing = new Listing();
 
-                listing.setTitle("Cozy Stay #" + i);
-                listing.setDescription("Beautiful place to relax.");
-                listing.setPricePerNight((double) (50 + rand.nextInt(300)));
-                listing.setLocation(randomCity(rand));
-                listing.setLat(randomLat(rand));
-                listing.setLon(randomLon(rand));
-                listing.setBeds(1 + rand.nextInt(5));
+                listing.setTitle(template.title);
+                listing.setDescription(template.description);
+                listing.setLocation(template.location);
+                listing.setLat(template.lat);
+                listing.setLon(template.lon);
+
+                listing.setPricePerNight((double) (120 + rand.nextInt(400)));
+                listing.setBeds(1 + rand.nextInt(4));
                 listing.setBaths(1 + rand.nextInt(3));
-                listing.setSquareFeet((double) (500 + rand.nextInt(2500)));
-                listing.setCapacity(1 + rand.nextInt(8));
-                listing.setAvailable(rand.nextBoolean());
+                listing.setSquareFeet(600.0 + rand.nextInt(2500));
+                listing.setCapacity(2 + rand.nextInt(6));
+                listing.setAvailable(true);
+
                 listing.setHost(host);
 
-                // REQUIRED FIELDS
                 listing.setCheckInTime(LocalTime.of(15, 0));
                 listing.setCheckOutTime(LocalTime.of(11, 0));
 
                 // ==============================
-                // AMENITIES (ONE ONLY)
+                // AMENITIES
                 // ==============================
+
                 Amenities amenities = new Amenities();
+
                 amenities.setListing(listing);
 
-                amenities.setDesertView(rand.nextBoolean());
-                amenities.setMountainView(rand.nextBoolean());
-                amenities.setValleyView(rand.nextBoolean());
                 amenities.setWifi(true);
-                amenities.setTv(rand.nextBoolean());
                 amenities.setKitchen(true);
+                amenities.setTv(rand.nextBoolean());
                 amenities.setWasher(rand.nextBoolean());
                 amenities.setDryer(rand.nextBoolean());
                 amenities.setPetsAllowed(rand.nextBoolean());
+
+                amenities.setMountainView(rand.nextBoolean());
+                amenities.setValleyView(rand.nextBoolean());
+                amenities.setDesertView(rand.nextBoolean());
+
                 amenities.setSmokeAlarm(true);
 
                 listing.setAmenities(amenities);
@@ -91,50 +166,51 @@ public class DataSeeder {
                 // ==============================
                 // IMAGES
                 // ==============================
-                for (int img = 1; img <= 3; img++) {
-                    ListingImage image = new ListingImage();
-                    image.setListing(listing);
-                    image.setImageUrl(
-                            "https://picsum.photos/seed/"
-                                    + i + "-" + img + "/800/600"
-                    );
 
-                    listing.getImages().add(image);
+                for (String url : template.images) {
+
+                    ListingImage img = new ListingImage();
+
+                    img.setListing(listing);
+                    img.setImageUrl(url);
+
+                    listing.getImages().add(img);
                 }
 
-                // ==============================
-                // SAVE ONCE
-                // ==============================
                 listingRepo.save(listing);
             }
 
-            System.out.println("🔥 Seeded 100 listings successfully!");
+            System.out.println("🔥 Seeded 100 realistic listings!");
         };
     }
 
     // ==============================
-    // RANDOM HELPERS
+    // TEMPLATE CLASS
     // ==============================
 
-    private String randomCity(Random rand) {
-        List<String> cities = List.of(
-                "Denver, CO",
-                "Austin, TX",
-                "Seattle, WA",
-                "San Diego, CA",
-                "Boise, ID",
-                "Nashville, TN",
-                "Phoenix, AZ",
-                "Portland, OR"
-        );
-        return cities.get(rand.nextInt(cities.size()));
-    }
+    static class ListingTemplate {
 
-    private double randomLat(Random rand) {
-        return 25 + rand.nextDouble() * 20;
-    }
+        String title;
+        String location;
+        double lat;
+        double lon;
+        String description;
+        List<String> images;
 
-    private double randomLon(Random rand) {
-        return -125 + rand.nextDouble() * 30;
+        ListingTemplate(
+                String title,
+                String location,
+                double lat,
+                double lon,
+                String description,
+                List<String> images
+        ) {
+            this.title = title;
+            this.location = location;
+            this.lat = lat;
+            this.lon = lon;
+            this.description = description;
+            this.images = images;
+        }
     }
 }
