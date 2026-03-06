@@ -49,7 +49,6 @@ public class DataSeeder {
             // ==============================
 
             List<ListingTemplate> templates = List.of(
-
                     new ListingTemplate(
                             "Modern Desert Retreat",
                             "Scottsdale, AZ",
