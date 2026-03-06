@@ -52,7 +52,7 @@ class UserServiceTest {
         user.setRole(User.Role.ADMIN);
 
         var auth = new UsernamePasswordAuthenticationToken(
-                1L,  // principal = user ID
+                1L,
                 null,
                 List.of()
         );
