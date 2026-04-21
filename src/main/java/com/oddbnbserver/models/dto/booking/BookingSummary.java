@@ -13,7 +13,13 @@ public class BookingSummary {
 
     private Long listingId;
 
+    private Long guestId;
+
     private String title;
+
+    private String guestFirstName;
+
+    private String guestLastName;
 
     private LocalDate checkIn;
 

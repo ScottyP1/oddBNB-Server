@@ -129,6 +129,17 @@ public class UserService {
         return getUserResponse(id);
     }
 
+    public UserResponse becomeHost() {
+        User existing = getCurrentUserEntity();
+
+        if (existing.getRole() == User.Role.GUEST) {
+            existing.setRole(User.Role.HOST);
+            userRepo.save(existing);
+        }
+
+        return getUserResponse(existing.getId());
+    }
+
     // DELETE
     public void removeUser(Long id) {
         User user = getUserEntity(id);

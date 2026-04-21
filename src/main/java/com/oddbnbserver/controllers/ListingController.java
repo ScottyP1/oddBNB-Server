@@ -1,6 +1,7 @@
 package com.oddbnbserver.controllers;
 
 import com.oddbnbserver.models.dto.booking.BookingSummary;
+import com.oddbnbserver.models.dto.booking.BookingAvailability;
 import com.oddbnbserver.models.dto.listing.CreateListingRequest;
 import com.oddbnbserver.models.dto.listing.ListingDetail;
 import com.oddbnbserver.models.dto.listing.ListingSummary;
@@ -50,8 +51,14 @@ public class ListingController {
     }
 
     @GetMapping("/{id}/bookings")
+    @PreAuthorize("hasAnyRole('HOST','ADMIN')")
     public List<BookingSummary> getListingBookings(@PathVariable Long id) {
         return bookingService.getBookingsForListing(id);
+    }
+
+    @GetMapping("/{id}/availability")
+    public List<BookingAvailability> getListingAvailability(@PathVariable Long id) {
+        return bookingService.getPublicAvailabilityForListing(id);
     }
 
     // UPDATE

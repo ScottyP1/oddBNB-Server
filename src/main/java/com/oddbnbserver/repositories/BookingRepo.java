@@ -7,15 +7,26 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface BookingRepo extends JpaRepository<Booking, Long> {
-    boolean existsByListingIdAndCheckInLessThanAndCheckOutGreaterThan(
+    boolean existsByListingIdAndStatusAndCheckInLessThanAndCheckOutGreaterThan(
             Long listingId,
+            Booking.Status status,
             LocalDate newCheckOut,
             LocalDate newCheckIn
     );
 
-    boolean existsByListingIdAndCheckInLessThanAndCheckOutGreaterThanAndIdNot(Long listingId, LocalDate end, LocalDate start, Long bookingId);
+    boolean existsByListingIdAndStatusAndCheckInLessThanAndCheckOutGreaterThanAndIdNot(
+            Long listingId,
+            Booking.Status status,
+            LocalDate end,
+            LocalDate start,
+            Long bookingId
+    );
 
     List<Booking> findByGuest_Id(Long guestId);
 
     List<Booking> findByListing_Id(Long listingId);
+
+    List<Booking> findByListing_IdAndStatus(Long listingId, Booking.Status status);
+
+    List<Booking> findByListing_Host_Id(Long hostId);
 }
