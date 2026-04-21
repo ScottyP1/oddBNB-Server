@@ -1,65 +1,65 @@
-name: Deploy Backend
-
-on:
-  push:
-    branches:
-      - main
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-
-    permissions:
-      id-token: write
-      contents: read
-
-    steps:
-      # Checkout repo
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      # Setup Java for Maven build
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 21
-
-      # Build Spring Boot jar
-      - name: Build Java app
-        run: mvn clean package
-
-      # Configure AWS credentials using OIDC
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ secrets.AWS_REGION }}
-
-      # Login to ECR
-      - name: Login to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v2
-
-      # Build Docker image
-      - name: Build Docker image
-        run: docker build -t oddbnb-backend .
-
-      # Tag Docker image
-      - name: Tag Docker image
-        run: |
-          docker tag oddbnb-backend:latest \
-          981425614405.dkr.ecr.us-east-1.amazonaws.com/oddbnb-backend:latest
-
-      # Push image to ECR
-      - name: Push image to ECR
-        run: |
-          docker push \
-          981425614405.dkr.ecr.us-east-1.amazonaws.com/oddbnb-backend:latest
-
-      # Trigger ECS deployment
-      - name: Deploy to ECS
-        run: |
-          aws ecs update-service \
-          --cluster oddbnb-cluster \
-          --service oddbnb-backend-service \
-          --force-new-deployment
+#name: Deploy Backend
+#
+#on:
+#  push:
+#    branches:
+#      - main
+#
+#jobs:
+#  deploy:
+#    runs-on: ubuntu-latest
+#
+#    permissions:
+#      id-token: write
+#      contents: read
+#
+#    steps:
+#      # Checkout repo
+#      - name: Checkout code
+#        uses: actions/checkout@v4
+#
+#      # Setup Java for Maven build
+#      - name: Set up Java
+#        uses: actions/setup-java@v4
+#        with:
+#          distribution: temurin
+#          java-version: 21
+#
+#      # Build Spring Boot jar
+#      - name: Build Java app
+#        run: mvn clean package
+#
+#      # Configure AWS credentials using OIDC
+#      - name: Configure AWS credentials
+#        uses: aws-actions/configure-aws-credentials@v4
+#        with:
+#          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+#          aws-region: ${{ secrets.AWS_REGION }}
+#
+#      # Login to ECR
+#      - name: Login to Amazon ECR
+#        uses: aws-actions/amazon-ecr-login@v2
+#
+#      # Build Docker image
+#      - name: Build Docker image
+#        run: docker build -t oddbnb-backend .
+#
+#      # Tag Docker image
+#      - name: Tag Docker image
+#        run: |
+#          docker tag oddbnb-backend:latest \
+#          981425614405.dkr.ecr.us-east-1.amazonaws.com/oddbnb-backend:latest
+#
+#      # Push image to ECR
+#      - name: Push image to ECR
+#        run: |
+#          docker push \
+#          981425614405.dkr.ecr.us-east-1.amazonaws.com/oddbnb-backend:latest
+#
+#      # Trigger ECS deployment
+#      - name: Deploy to ECS
+#        run: |
+#          aws ecs update-service \
+#          --cluster oddbnb-cluster \
+#          --service oddbnb-backend-service \
+#          --force-new-deployment
