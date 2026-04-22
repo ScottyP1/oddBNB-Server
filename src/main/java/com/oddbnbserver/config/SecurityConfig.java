@@ -68,7 +68,7 @@ public class SecurityConfig {
 
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOrigins(List.of("https://theoddbnb.com", "http://localhost:3000"));
+        config.setAllowedOrigins(List.of("https://theoddbnb.com", "http://localhost:3000", "https://odd-bnb-client.vercel.app"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(false);
