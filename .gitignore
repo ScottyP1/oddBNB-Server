@@ -13,7 +13,7 @@ target/
 .springBeans
 .sts4-cache
 
-.m2/repo
+.m2repo
 ### IntelliJ IDEA ###
 .idea
 *.iws
