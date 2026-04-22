@@ -7,7 +7,6 @@ import com.oddbnbserver.models.User;
 import com.oddbnbserver.repositories.ListingImageRepo;
 import com.oddbnbserver.repositories.ListingRepo;
 import com.oddbnbserver.repositories.UserRepo;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,20 +23,12 @@ public class DemoListingSeeder implements ApplicationRunner {
     private final ListingImageRepo listingImageRepo;
     private final PasswordEncoder passwordEncoder;
 
-    @Value("${app.seed.demo-listings:false}")
-    private boolean seedEnabled;
-
-    @Value("${app.seed.demo-user-email:test@email.com}")
-    private String seedEmail;
-
-    @Value("${app.seed.demo-user-password:test1234}")
-    private String seedPassword;
-
-    @Value("${app.seed.demo-user-first-name:Test}")
-    private String seedFirstName;
-
-    @Value("${app.seed.demo-user-last-name:Host}")
-    private String seedLastName;
+    private static final String ADMIN_EMAIL = "admin@oddbnb.com";
+    private static final String ADMIN_PASSWORD = "password";
+    private static final String HOST_EMAIL = "host@oddbnb.com";
+    private static final String HOST_PASSWORD = "password";
+    private static final String USER_EMAIL = "user@oddbnb.com";
+    private static final String USER_PASSWORD = "password";
 
     public DemoListingSeeder(
             UserRepo userRepo,
@@ -53,11 +44,12 @@ public class DemoListingSeeder implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        if (!seedEnabled) {
+        if (userRepo.count() > 0 || listingRepo.count() > 0) {
+            System.out.println("Demo listing seed skipped: users or listings table is not empty.");
             return;
         }
 
-        User host = ensureSeedHost();
+        SeedUsers users = ensureSeedUsers();
         int createdCount = 0;
 
         for (SeedListing seed : SEED_LISTINGS) {
@@ -65,31 +57,62 @@ public class DemoListingSeeder implements ApplicationRunner {
                 continue;
             }
 
-            listingRepo.save(buildListing(host, seed));
+            listingRepo.save(buildListing(users.host(), seed));
             createdCount++;
         }
 
         System.out.printf(
-                "Demo listing seed complete: host=%s, created=%d, skipped=%d%n",
-                host.getEmail(),
+                "Demo listing seed complete: admin=%s, host=%s, user=%s, created=%d, skipped=%d%n",
+                users.admin().getEmail(),
+                users.host().getEmail(),
+                users.user().getEmail(),
                 createdCount,
                 SEED_LISTINGS.size() - createdCount
         );
     }
 
-    private User ensureSeedHost() {
-        User user = userRepo.findByEmail(seedEmail).orElseGet(() -> {
+    private SeedUsers ensureSeedUsers() {
+        User admin = ensureSeedUser(ADMIN_EMAIL, "Admin", "Account", ADMIN_PASSWORD, User.Role.ADMIN);
+        User host = ensureSeedUser(HOST_EMAIL, "Host", "Account", HOST_PASSWORD, User.Role.HOST);
+        User user = ensureSeedUser(USER_EMAIL, "User", "Account", USER_PASSWORD, User.Role.GUEST);
+        return new SeedUsers(admin, host, user);
+    }
+
+    private User ensureSeedUser(
+            String email,
+            String firstName,
+            String lastName,
+            String rawPassword,
+            User.Role role
+    ) {
+        User user = userRepo.findByEmail(email).orElseGet(() -> {
             User newUser = new User();
-            newUser.setEmail(seedEmail);
-            newUser.setFirstName(seedFirstName);
-            newUser.setLastName(seedLastName);
-            newUser.setPasswordHash(passwordEncoder.encode(seedPassword));
-            newUser.setRole(User.Role.HOST);
+            newUser.setEmail(email);
+            newUser.setFirstName(firstName);
+            newUser.setLastName(lastName);
+            newUser.setPasswordHash(passwordEncoder.encode(rawPassword));
+            newUser.setRole(role);
             return userRepo.save(newUser);
         });
 
-        if (user.getRole() == User.Role.GUEST) {
-            user.setRole(User.Role.HOST);
+        boolean dirty = false;
+
+        if (user.getRole() != role) {
+            user.setRole(role);
+            dirty = true;
+        }
+
+        if (!firstName.equals(user.getFirstName())) {
+            user.setFirstName(firstName);
+            dirty = true;
+        }
+
+        if (!lastName.equals(user.getLastName())) {
+            user.setLastName(lastName);
+            dirty = true;
+        }
+
+        if (dirty) {
             user = userRepo.save(user);
         }
 
@@ -154,11 +177,14 @@ public class DemoListingSeeder implements ApplicationRunner {
     ) {
     }
 
+    private record SeedUsers(User admin, User host, User user) {
+    }
+
     private static final List<SeedListing> SEED_LISTINGS = List.of(
             new SeedListing(
-                    "Nebula Knockout Saucer",
+                    "Alien Saucer Escape",
                     "/listings/alien.png",
-                    "Retro-futurist flying saucer stay with neon trim, glowing portholes, and midnight-abduction energy in the best possible way.",
+                    "Built around the imported alien saucer image: a retro UFO stay with glowing windows, metallic curves, and full desert-crash-site energy.",
                     "Roswell, New Mexico",
                     35.1983,
                     -106.663,
@@ -173,9 +199,9 @@ public class DemoListingSeeder implements ApplicationRunner {
                     List.of("desertView", "kitchen", "smokeAlarm", "tv", "wifi")
             ),
             new SeedListing(
-                    "Cask Of Wonder Nook",
+                    "Barrel Cabin Retreat",
                     "/listings/barrel.png",
-                    "A cedar barrel hideout with a storybook round door, warm wood interior, and just enough whimsy to make normal cabins jealous.",
+                    "Based on the barrel image you imported: a round cedar stay with a storybook door, warm wood walls, and compact cabin comfort.",
                     "Portland, Oregon",
                     45.5231,
                     -122.6765,
@@ -190,9 +216,9 @@ public class DemoListingSeeder implements ApplicationRunner {
                     List.of("kitchen", "smokeAlarm", "valleyView", "wifi")
             ),
             new SeedListing(
-                    "Tidal Velvet Cliffhouse",
+                    "Cliffside Glass House",
                     "/listings/cliffSide.png",
-                    "Glassy cliffside lounge with fireplace, wall-to-wall ocean views, and sunset bragging rights from every seat in the room.",
+                    "Mapped directly to the cliffSide image: a dramatic glass house on the edge of the water with huge views and a clean modern interior.",
                     "Laguna Beach, California",
                     33.8121,
                     -117.919,
@@ -207,9 +233,9 @@ public class DemoListingSeeder implements ApplicationRunner {
                     List.of("dryer", "kitchen", "smokeAlarm", "tv", "washer", "wifi")
             ),
             new SeedListing(
-                    "Jurassic Moonstone Burrow",
+                    "Flintstone Stone House",
                     "/listings/flinstone.png",
-                    "A handmade stone-age fantasy dome glowing under the stars, perfect for guests who want Flintstones vibes without cave-person plumbing.",
+                    "Inspired by the flinstone image: a rounded stone home with prehistoric-cartoon vibes, but still set up like a real getaway.",
                     "Tucson, Arizona",
                     32.2226,
                     -110.9747,
@@ -224,9 +250,9 @@ public class DemoListingSeeder implements ApplicationRunner {
                     List.of("desertView", "kitchen", "mountainView", "petsAllowed", "smokeAlarm", "wifi")
             ),
             new SeedListing(
-                    "Moss Boss Shire Bunker",
+                    "Hillside Hobbit Hideaway",
                     "/listings/hillside.png",
-                    "Half-hidden hillside home with mossy curves, tiny round windows, and strong secret-council-of-hobbits energy.",
+                    "Pulled from the hillside image: a tucked-away earth home with grass on the roof, curved walls, and a quiet hidden feel.",
                     "Hocking Hills, Ohio",
                     39.113,
                     -82.536,
@@ -241,9 +267,9 @@ public class DemoListingSeeder implements ApplicationRunner {
                     List.of("kitchen", "petsAllowed", "smokeAlarm", "valleyView", "wifi")
             ),
             new SeedListing(
-                    "The Suspended Acorn Reactor",
+                    "Hornet Nest Tree Pod",
                     "/listings/hornetNest.png",
-                    "Suspended woodland orb for people who looked at a hornets nest and thought, yes, but make it boutique and adorable.",
+                    "Modeled on the hornetNest image: a suspended woodland pod with a woven shell, wrapped in trees and built for a one-of-a-kind stay.",
                     "Forest of Dean, England",
                     51.5074,
                     -2.318,
@@ -258,9 +284,9 @@ public class DemoListingSeeder implements ApplicationRunner {
                     List.of("mountainView", "smokeAlarm", "valleyView", "wifi")
             ),
             new SeedListing(
-                    "Glacier Gospel Lake Lodge",
+                    "Lake Cabin Lodge",
                     "/listings/lakeCabin.png",
-                    "Turquoise lakefront escape with cathedral peaks, dockside calm, and enough mountain drama to ruin ordinary weekends forever.",
+                    "This one follows the lakeCabin image exactly: a timber lodge on bright blue water with mountain views and a private dock feel.",
                     "Lake Louise, Alberta",
                     51.4254,
                     -116.1773,
@@ -275,9 +301,9 @@ public class DemoListingSeeder implements ApplicationRunner {
                     List.of("dryer", "kitchen", "mountainView", "smokeAlarm", "tv", "valleyView", "washer", "wifi")
             ),
             new SeedListing(
-                    "Starlight Snowglobe Hideout",
+                    "Snowglobe Bubble Stay",
                     "/listings/snowglobe.png",
-                    "Transparent forest bubble where stargazing happens from bed and every night feels like sleeping inside a sci-fi snow globe.",
+                    "Taken from the snowglobe image: a transparent bubble stay in the woods where the whole point is stargazing from bed.",
                     "Normandy Woodland, France",
                     48.8566,
                     2.3522,
@@ -292,9 +318,9 @@ public class DemoListingSeeder implements ApplicationRunner {
                     List.of("smokeAlarm", "valleyView", "wifi")
             ),
             new SeedListing(
-                    "Mirage Moonbell Camp",
+                    "Desert Bell Tent Camp",
                     "/listings/tent.png",
-                    "Desert glamping bell tent with sunset mountain silhouettes, firepit vibes, and the kind of soft lighting influencers pray for.",
+                    "Based on the tent image you already imported: a desert bell tent setup with soft lighting, open sky, and simple glamping comfort.",
                     "Las Vegas Desert Rim, Nevada",
                     36.1699,
                     -115.1398,
@@ -309,9 +335,9 @@ public class DemoListingSeeder implements ApplicationRunner {
                     List.of("desertView", "mountainView", "smokeAlarm", "wifi")
             ),
             new SeedListing(
-                    "Poseidon's Neon Sleeper",
+                    "Underwater Suite",
                     "/listings/underwater.png",
-                    "An underwater suite wrapped in blue light and passing fish, built for guests who want sleepovers sponsored by Neptune.",
+                    "Built from the underwater image: a submerged bedroom surrounded by blue water, panoramic glass, and full aquarium-level atmosphere.",
                     "Rangali Island, Maldives",
                     4.1755,
                     73.5093,
