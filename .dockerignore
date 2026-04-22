@@ -1,1 +1,6 @@
-src/main/java/com/oddbnbserver/config/DataSeeder.java
+target
+.git
+.github
+.idea
+docs
+.DS_Store

@@ -5,6 +5,7 @@ import com.oddbnbserver.models.Booking;
 import com.oddbnbserver.models.Listing;
 import com.oddbnbserver.models.User;
 import com.oddbnbserver.models.dto.booking.CreateBookingRequest;
+import com.oddbnbserver.models.dto.booking.BookingStatusUpdateRequest;
 import com.oddbnbserver.models.dto.booking.UpdateBookingRequest;
 import com.oddbnbserver.repositories.BookingRepo;
 import com.oddbnbserver.repositories.ListingRepo;
@@ -25,6 +26,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -158,5 +160,89 @@ public class BookingServiceTest {
         assertEquals(LocalDate.of(2026, 12, 25), booking.getCheckOut());
 
         verify(bookingRepo).save(booking);
+    }
+
+    @Test
+    void shouldConfirmBookingAsHost() {
+
+        User host = new User();
+        host.setId(1L);
+        host.setRole(User.Role.HOST);
+
+        User guest = new User();
+        guest.setId(2L);
+        guest.setFirstName("Guest");
+        guest.setLastName("User");
+
+        Listing listing = new Listing();
+        listing.setId(1L);
+        listing.setHost(host);
+        listing.setPricePerNight(200.0);
+        listing.setTitle("Treehouse");
+
+        Booking booking = new Booking();
+        booking.setId(1L);
+        booking.setGuest(guest);
+        booking.setListing(listing);
+        booking.setCheckIn(LocalDate.of(2026, 12, 20));
+        booking.setCheckOut(LocalDate.of(2026, 12, 25));
+        booking.setGuestsCount(2);
+        booking.setTotalPrice(1000.0);
+        booking.setStatus(Booking.Status.PENDING);
+
+        BookingStatusUpdateRequest request = new BookingStatusUpdateRequest();
+        request.setStatus("CONFIRMED");
+
+        when(bookingRepo.findById(1L)).thenReturn(Optional.of(booking));
+        when(bookingRepo.save(any())).thenReturn(booking);
+
+        bookingService.updateBookingStatus(1L, request);
+
+        assertEquals(Booking.Status.CONFIRMED, booking.getStatus());
+        verify(bookingRepo).save(booking);
+    }
+
+    @Test
+    void shouldOnlyBlockConfirmedAvailability() {
+
+        Long userId = SecurityUtils.getRequiredUserId();
+
+        Listing listing = new Listing();
+        listing.setId(1L);
+        listing.setTitle("Treehouse");
+        listing.setPricePerNight(200.0);
+        listing.setCapacity(4);
+        listing.setHost(new User());
+        listing.getHost().setId(9L);
+
+        CreateBookingRequest newBooking = new CreateBookingRequest();
+        newBooking.setListingId(1L);
+        newBooking.setGuestsCount(2);
+        newBooking.setCheckIn(LocalDate.of(2026, 12, 12));
+        newBooking.setCheckOut(LocalDate.of(2026, 12, 15));
+
+        Booking saved = new Booking();
+        saved.setId(8L);
+        saved.setListing(listing);
+        saved.setGuest(user);
+        saved.setCheckIn(newBooking.getCheckIn());
+        saved.setCheckOut(newBooking.getCheckOut());
+        saved.setGuestsCount(2);
+        saved.setTotalPrice(600.0);
+        saved.setStatus(Booking.Status.PENDING);
+
+        when(listingRepo.findById(1L)).thenReturn(Optional.of(listing));
+        when(userRepo.findById(userId)).thenReturn(Optional.of(user));
+        when(bookingRepo.existsByListingIdAndStatusAndCheckInLessThanAndCheckOutGreaterThan(
+                1L,
+                Booking.Status.CONFIRMED,
+                newBooking.getCheckOut(),
+                newBooking.getCheckIn()
+        )).thenReturn(false);
+        when(bookingRepo.save(any())).thenReturn(saved);
+
+        var result = bookingService.create(newBooking);
+
+        assertEquals("PENDING", result.getStatus());
     }
 }

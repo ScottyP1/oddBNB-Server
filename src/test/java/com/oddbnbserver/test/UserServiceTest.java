@@ -195,4 +195,18 @@ class UserServiceTest {
 
     }
 
+    @Test
+    void shouldUpgradeGuestToHost() {
+
+        user.setRole(User.Role.GUEST);
+
+        when(userRepo.findById(1L)).thenReturn(Optional.of(user));
+        when(userRepo.save(user)).thenReturn(user);
+
+        UserResponse response = userService.becomeHost();
+
+        assertEquals(User.Role.HOST, response.getRole());
+        verify(userRepo).save(user);
+    }
+
 }

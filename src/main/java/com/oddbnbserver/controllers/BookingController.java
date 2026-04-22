@@ -1,6 +1,7 @@
 package com.oddbnbserver.controllers;
 
 import com.oddbnbserver.models.dto.booking.BookingSummary;
+import com.oddbnbserver.models.dto.booking.BookingStatusUpdateRequest;
 import com.oddbnbserver.models.dto.booking.CreateBookingRequest;
 import com.oddbnbserver.models.dto.booking.UpdateBookingRequest;
 import com.oddbnbserver.service.BookingService;
@@ -34,6 +35,12 @@ public class BookingController {
         return bookingService.getCurrentUserBookings();
     }
 
+    @GetMapping("/host")
+    @PreAuthorize("hasAnyRole('HOST','ADMIN')")
+    public List<BookingSummary> getHostBookings() {
+        return bookingService.getCurrentHostBookings();
+    }
+
     @GetMapping
     @PreAuthorize("hasAnyRole('HOST','ADMIN')")
     public List<BookingSummary> getAllBookings() {
@@ -48,8 +55,16 @@ public class BookingController {
         return bookingService.updateBooking(id, bookingUpdate);
     }
 
-    @DeleteMapping("/{id}")
+    @PatchMapping("/{id}/status")
     @PreAuthorize("hasAnyRole('HOST','ADMIN')")
+    public BookingSummary updateBookingStatus(
+            @PathVariable Long id,
+            @RequestBody BookingStatusUpdateRequest request) {
+
+        return bookingService.updateBookingStatus(id, request);
+    }
+
+    @DeleteMapping("/{id}")
     public void deleteBooking(@PathVariable Long id) {
         bookingService.removeBooking(id);
     }

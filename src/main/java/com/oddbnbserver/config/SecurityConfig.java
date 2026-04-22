@@ -48,10 +48,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/listings/**").hasAnyRole("HOST", "ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/listings/**").hasAnyRole("HOST", "ADMIN")
 
-                        .requestMatchers(HttpMethod.GET, "/bookings/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/bookings/**").permitAll()
-                        .requestMatchers(HttpMethod.PATCH, "/bookings/**").permitAll()
-                        .requestMatchers(HttpMethod.DELETE, "/bookings/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/bookings/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/bookings/**").authenticated()
+                        .requestMatchers(HttpMethod.PATCH, "/bookings/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/bookings/**").authenticated()
 
                         .anyRequest().authenticated()
                 )
@@ -68,7 +68,7 @@ public class SecurityConfig {
 
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOrigins(List.of("https://theoddbnb.com"));
+        config.setAllowedOrigins(List.of("https://theoddbnb.com", "http://localhost:3000"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(false);

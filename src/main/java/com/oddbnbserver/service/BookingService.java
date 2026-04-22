@@ -4,7 +4,9 @@ import com.oddbnbserver.models.Booking;
 import com.oddbnbserver.models.Listing;
 import com.oddbnbserver.models.User;
 import com.oddbnbserver.models.dto.booking.BookingSummary;
+import com.oddbnbserver.models.dto.booking.BookingAvailability;
 import com.oddbnbserver.models.dto.booking.CreateBookingRequest;
+import com.oddbnbserver.models.dto.booking.BookingStatusUpdateRequest;
 import com.oddbnbserver.models.dto.booking.UpdateBookingRequest;
 import com.oddbnbserver.repositories.BookingRepo;
 import com.oddbnbserver.repositories.ListingRepo;
@@ -39,17 +41,29 @@ public class BookingService {
 
         Long userId = SecurityUtils.getRequiredUserId();
 
-
         Listing listing = listingRepo.findById(req.getListingId())
-                .orElseThrow(() -> new RuntimeException("Listing not found"));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Listing not found"
+                ));
 
         User guest = userRepo.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "User not found"
+                ));
+
+        if (listing.getHost().getId().equals(userId)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Hosts cannot book their own listing"
+            );
+        }
 
         LocalDate start = req.getCheckIn();
         LocalDate end = req.getCheckOut();
 
-        validateDates(start, end);
+        validateBookingRequest(start, end, req.getGuestsCount(), listing);
 
         ensureAvailability(listing.getId(), start, end);
 
@@ -63,16 +77,17 @@ public class BookingService {
         booking.setCheckOut(end);
         booking.setGuestsCount(req.getGuestsCount());
         booking.setTotalPrice(price);
-        booking.setStatus(Booking.Status.CONFIRMED);
+        booking.setStatus(Booking.Status.PENDING);
 
         Booking saved = bookingRepo.save(booking);
 
-        return toSummary(saved, nights, price, "Booking confirmed");
+        return toSummary(saved, nights, price, "Booking pending");
     }
 
     public BookingSummary getBooking(Long id) {
 
         Booking booking = getBookingEntity(id);
+        assertBookingParticipantOrAdmin(booking);
 
         long nights = ChronoUnit.DAYS.between(
                 booking.getCheckIn(),
@@ -88,6 +103,14 @@ public class BookingService {
     }
 
     public List<BookingSummary> getBookingsForUser(Long userId) {
+        Long currentUserId = SecurityUtils.getRequiredUserId();
+
+        if (!currentUserId.equals(userId) && !SecurityUtils.isAdmin()) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "You are not allowed to view these bookings"
+            );
+        }
 
         List<Booking> bookings = bookingRepo.findByGuest_Id(userId);
 
@@ -117,6 +140,13 @@ public class BookingService {
     }
 
     public List<BookingSummary> getBookingsForListing(Long id) {
+        Listing listing = listingRepo.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Listing not found"
+                ));
+
+        assertListingHostOrAdmin(listing);
 
         List<Booking> bookings = bookingRepo.findByListing_Id(id);
 
@@ -134,6 +164,44 @@ public class BookingService {
                             null
                     );
                 })
+                .toList();
+    }
+
+    public List<BookingSummary> getCurrentHostBookings() {
+        Long userId = SecurityUtils.getRequiredUserId();
+
+        if (SecurityUtils.isAdmin()) {
+            return getAllBookings();
+        }
+
+        return bookingRepo.findByListing_Host_Id(userId)
+                .stream()
+                .map(b -> {
+                    long nights = ChronoUnit.DAYS.between(
+                            b.getCheckIn(),
+                            b.getCheckOut()
+                    );
+
+                    return toSummary(
+                            b,
+                            nights,
+                            b.getTotalPrice(),
+                            null
+                    );
+                })
+                .toList();
+    }
+
+    public List<BookingAvailability> getPublicAvailabilityForListing(Long listingId) {
+        listingRepo.findById(listingId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Listing not found"
+                ));
+
+        return bookingRepo.findByListing_IdAndStatus(listingId, Booking.Status.CONFIRMED)
+                .stream()
+                .map(this::toAvailability)
                 .toList();
     }
 
@@ -183,9 +251,9 @@ public class BookingService {
                 ? req.getGuestsCount()
                 : existing.getGuestsCount();
 
-        validateDates(start, end);
-
         Listing listing = existing.getListing();
+
+        validateBookingRequest(start, end, guests, listing);
 
         ensureAvailabilityForUpdate(
                 listing.getId(),
@@ -205,6 +273,27 @@ public class BookingService {
         Booking saved = bookingRepo.save(existing);
 
         return toSummary(saved, nights, price, "Booking updated");
+    }
+
+    public BookingSummary updateBookingStatus(Long id, BookingStatusUpdateRequest req) {
+
+        Booking booking = getBookingEntity(id);
+        assertListingHostOrAdmin(booking.getListing());
+
+        Booking.Status nextStatus = parseHostDecision(req.getStatus());
+        booking.setStatus(nextStatus);
+
+        Booking saved = bookingRepo.save(booking);
+        long nights = ChronoUnit.DAYS.between(
+                saved.getCheckIn(),
+                saved.getCheckOut()
+        );
+
+        String message = nextStatus == Booking.Status.CONFIRMED
+                ? "Booking confirmed"
+                : "Booking declined";
+
+        return toSummary(saved, nights, saved.getTotalPrice(), message);
     }
 
 
@@ -234,9 +323,36 @@ public class BookingService {
                         "Booking not found"));
     }
 
-    private void validateDates(LocalDate start, LocalDate end) {
+    private void validateBookingRequest(LocalDate start,
+                                        LocalDate end,
+                                        Integer guestsCount,
+                                        Listing listing) {
+        if (start == null || end == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Check-in and check-out are required"
+            );
+        }
+
         if (!start.isBefore(end)) {
-            throw new RuntimeException("Invalid date range");
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Invalid date range"
+            );
+        }
+
+        if (guestsCount == null || guestsCount < 1) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Guests count must be at least 1"
+            );
+        }
+
+        if (listing.getCapacity() != null && guestsCount > listing.getCapacity()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Guests count exceeds listing capacity"
+            );
         }
     }
 
@@ -245,8 +361,8 @@ public class BookingService {
                                     LocalDate end) {
 
         boolean exists = bookingRepo
-                .existsByListingIdAndCheckInLessThanAndCheckOutGreaterThan(
-                        listingId, end, start);
+                .existsByListingIdAndStatusAndCheckInLessThanAndCheckOutGreaterThan(
+                        listingId, Booking.Status.CONFIRMED, end, start);
 
         if (exists) {
             throw new ResponseStatusException(
@@ -262,8 +378,8 @@ public class BookingService {
                                              Long bookingId) {
 
         boolean exists = bookingRepo
-                .existsByListingIdAndCheckInLessThanAndCheckOutGreaterThanAndIdNot(
-                        listingId, end, start, bookingId);
+                .existsByListingIdAndStatusAndCheckInLessThanAndCheckOutGreaterThanAndIdNot(
+                        listingId, Booking.Status.CONFIRMED, end, start, bookingId);
 
         if (exists) {
             throw new ResponseStatusException(
@@ -271,6 +387,68 @@ public class BookingService {
                     "Listing already booked for selected dates"
             );
         }
+    }
+
+    private void assertBookingParticipantOrAdmin(Booking booking) {
+        Long userId = SecurityUtils.getRequiredUserId();
+
+        boolean isGuest = booking.getGuest().getId().equals(userId);
+        boolean isHost = booking.getListing().getHost().getId().equals(userId);
+
+        if (!isGuest && !isHost && !SecurityUtils.isAdmin()) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "You are not allowed to view this booking"
+            );
+        }
+    }
+
+    private void assertListingHostOrAdmin(Listing listing) {
+        Long userId = SecurityUtils.getRequiredUserId();
+
+        boolean isHost = listing.getHost().getId().equals(userId);
+
+        if (!isHost && !SecurityUtils.isAdmin()) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "You are not allowed to manage this listing's bookings"
+            );
+        }
+    }
+
+    private Booking.Status parseHostDecision(String rawStatus) {
+        if (rawStatus == null || rawStatus.isBlank()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Status is required"
+            );
+        }
+
+        Booking.Status status;
+        try {
+            status = Booking.Status.valueOf(rawStatus.trim().toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Invalid booking status"
+            );
+        }
+
+        if (status != Booking.Status.CONFIRMED && status != Booking.Status.DECLINED) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Hosts can only confirm or decline bookings"
+            );
+        }
+
+        return status;
+    }
+
+    private BookingAvailability toAvailability(Booking booking) {
+        BookingAvailability availability = new BookingAvailability();
+        availability.setCheckIn(booking.getCheckIn());
+        availability.setCheckOut(booking.getCheckOut());
+        return availability;
     }
 
     private BookingSummary toSummary(Booking booking,
@@ -282,6 +460,7 @@ public class BookingService {
 
         res.setBookingId(booking.getId());
         res.setListingId(booking.getListing().getId());
+        res.setGuestId(booking.getGuest().getId());
         res.setCheckIn(booking.getCheckIn());
         res.setCheckOut(booking.getCheckOut());
         res.setGuestsCount(booking.getGuestsCount());
@@ -293,6 +472,8 @@ public class BookingService {
         Listing listing = booking.getListing();
 
         res.setTitle(listing.getTitle());
+        res.setGuestFirstName(booking.getGuest().getFirstName());
+        res.setGuestLastName(booking.getGuest().getLastName());
 
         if (listing.getImages() != null && !listing.getImages().isEmpty()) {
             res.setImageUrl(listing.getImages().getFirst().getImageUrl());
