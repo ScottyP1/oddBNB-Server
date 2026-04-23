@@ -40,7 +40,7 @@ public class ListingSeeder implements ApplicationRunner {
     public void run(ApplicationArguments args) {
         SeedUsers users = ensureSeedUsers();
 
-        if (listingRepo.count() > 0) {
+        if (listingRepo.count() > 0 && userRepo.count() > 0) {
             System.out.printf(
                     "Listing seed skipped: listings table already has data. admin=%s host=%s user=%s%n",
                     users.admin().getEmail(),
